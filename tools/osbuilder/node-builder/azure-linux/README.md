@@ -137,11 +137,9 @@ If the instructions are not being followed based on its parent repository having
 
 ```
 pushd kata-containers/tools/osbuilder/node-builder/azure-linux
- CONF_PODS=y ./host_builder.sh
+CONF_PODS=yes ./host_builder.sh
 ./host_builder.sh
- CONF_PODS=y ./guest_builder.sh
-./host_builder.sh
- CONF_PODS=y ./uvm_builder.sh
+CONF_PODS=yes ./uvm_builder.sh
 ./uvm_builder.sh
 ```
 
@@ -151,9 +149,9 @@ In this step, we move the build artifacts to proper places and eventually restar
 
 ```
 pushd kata-containers/tools/osbuilder/node-builder/azure-linux
-sudo  CONF_PODS=y ./host_deploy.sh
+sudo  CONF_PODS=yes ./host_deploy.sh
 sudo ./host_deploy.sh
-sudo CONF_PODS=y ./uvm_deploy.sh
+sudo CONF_PODS=yes ./uvm_deploy.sh
 sudo ./uvm_deploy.sh
 popd
 ```

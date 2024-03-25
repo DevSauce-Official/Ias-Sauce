@@ -16,8 +16,9 @@ repo_dir="${script_dir}/../../../../"
 lib_file="${script_dir}/../../scripts/lib.sh"
 source "${lib_file}"
 
-uvm_files_dir="${script_dir}/uvm-files"
-rootfs_make_flags="AGENT_SOURCE_BIN=${uvm_files_dir}/agent/usr/bin/kata-agent"
+agent_install_dir="${script_dir}/agent-install"
+
+rootfs_make_flags="AGENT_SOURCE_BIN=${agent_install_dir}/usr/bin/kata-agent"
 
 if [ "${CONF_PODS}" == "yes" ]; then
     rootfs_make_flags+=" AGENT_POLICY=yes CONF_GUEST=yes AGENT_POLICY_FILE=allow-set-policy.rego"
@@ -31,6 +32,11 @@ fi
 
 pushd "${repo_dir}"
 
+pushd src/agent/
+rm -rf ${agent_install_dir}
+make install DESTDIR=${agent_install_dir}
+popd
+
 # build rootfs, include agent binary
 pushd tools/osbuilder
 sudo -E PATH=$PATH  make ${rootfs_make_flags} -B DISTRO=cbl-mariner rootfs
@@ -38,8 +44,8 @@ ROOTFS_PATH="$(sudo readlink -f ./cbl-mariner_rootfs)"
 popd
 
 # add agent service files
-cp ${uvm_files_dir}/agent/usr/lib/systemd/system/kata-containers.target  ${ROOTFS_DIR}/usr/lib/systemd/system/kata-containers.target
-cp ${uvm_files_dir}/usr/lib/systemd/system/kata-agent.service ${ROOTFS_DIR}/usr/lib/systemd/system/kata-agent.service
+cp ${agent_install_dir}/usr/lib/systemd/system/kata-containers.target  ${ROOTFS_DIR}/usr/lib/systemd/system/kata-containers.target
+cp ${agent_install_dir}/usr/lib/systemd/system/kata-agent.service ${ROOTFS_DIR}/usr/lib/systemd/system/kata-agent.service
 
 if [ "${CONF_PODS}" == "yes" ]; then
     # tardev-snapshotter: tarfs kernel module/driver

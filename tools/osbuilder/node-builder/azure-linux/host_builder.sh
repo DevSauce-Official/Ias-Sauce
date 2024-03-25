@@ -7,6 +7,7 @@ set -o pipefail
 set -o errtrace
 
 [ -n "$DEBUG" ] && set -x
+
 CONF_PODS=${CONF_PODS:-no}
 
 script_dir="$(dirname $(readlink -f $0))"
@@ -21,6 +22,13 @@ source "${common_file}"
 # these options ensure we produce the proper CLH config file
 generic_runtime_make_flags="SKIP_GO_VERSION_CHECK=1 QEMUCMD= FCCMD= ACRNCMD= STRATOVIRTCMD= DEFAULT_HYPERVISOR=cloud-hypervisor
     DEFMEMSZ=256 DEFSTATICSANDBOXWORKLOADMEM=1792 DEFVIRTIOFSDAEMON={$virtiofsd_binary_location} PREFIX=${deploy_path_prefix}"
+
+agent_make_flags="LIBC=gnu OPENSSL_NO_VENDOR=Y"
+
+if [ "${CONF_PODS}" == "yes" ]; then
+    agent_make_flags+=" AGENT_POLICY=yes"
+fi
+
 
 pushd "${repo_dir}"
 
@@ -71,6 +79,12 @@ else
     # Once we shift to using an image for vanilla Kata, we can use IMAGEPATH to set the proper path (or better make sure the image file gets placed so that default values can be used).
     sed -i -e "s|image = .*$|initrd = \"${uvm_path}/${initrd_file_name}\"|" "${shim_config_file_name}"
 fi
+popd
+
+# kata-agent binary
+pushd src/agent/
+make clean
+make ${agent_make_flags}
 popd
 
 popd
