@@ -11,6 +11,8 @@ if [ "${CONF_PODS}" == "yes" ]; then
     uvm_measurement_file_name="igvm-measurement.cose"
     uvm_dbg_measurement_file_name="igvm-debug-measurement.cose"
     shim_config_path="${deploy_path_prefix}/share/defaults/kata-containers"
+    # the Makefile is written in a way that regardless of CONF_PODS, the -snp/-tdx resp. non-snp/tdx configs are always created.
+    # this variable indicates which one is the right shim config file
     shim_config_file_name="configuration-clh-snp.toml"
     shim_dbg_config_file_name="configuration-clh-snp-debug.toml"
     debugging_binary_path="${deploy_path_prefix}/bin"

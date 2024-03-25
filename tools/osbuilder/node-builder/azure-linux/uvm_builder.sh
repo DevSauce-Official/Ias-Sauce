@@ -39,7 +39,8 @@ popd
 
 # build rootfs, include agent binary
 pushd tools/osbuilder
-sudo -E PATH=$PATH  make ${rootfs_make_flags} -B DISTRO=cbl-mariner rootfs
+sudo -E PATH=$PATH make clean
+sudo -E PATH=$PATH make ${rootfs_make_flags} -B DISTRO=cbl-mariner rootfs
 ROOTFS_PATH="$(sudo readlink -f ./cbl-mariner_rootfs)"
 popd
 
@@ -57,6 +58,7 @@ if [ "${CONF_PODS}" == "yes" ]; then
     popd
     # - build tarfs kernel module
     pushd src/tarfs
+    make clean
     make KDIR=/usr/src/linux-headers-${KERNEL_VER}
     make KDIR=/usr/src/linux-headers-${KERNEL_VER} install
     KERNEL_MODULES_DIR=$PWD/_install/lib/modules/${KERNEL_MODULE_VER}

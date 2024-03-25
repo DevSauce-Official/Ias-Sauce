@@ -20,15 +20,18 @@ common_file="common.sh"
 source "${common_file}"
 
 # these options ensure we produce the proper CLH config file
-generic_runtime_make_flags="SKIP_GO_VERSION_CHECK=1 QEMUCMD= FCCMD= ACRNCMD= STRATOVIRTCMD= DEFAULT_HYPERVISOR=cloud-hypervisor
-    DEFMEMSZ=256 DEFSTATICSANDBOXWORKLOADMEM=1792 DEFVIRTIOFSDAEMON={$virtiofsd_binary_location} PREFIX=${deploy_path_prefix}"
+runtime_make_flags="SKIP_GO_VERSION_CHECK=1 QEMUCMD= FCCMD= ACRNCMD= STRATOVIRTCMD= DEFAULT_HYPERVISOR=cloud-hypervisor
+    DEFMEMSZ=256 DEFSTATICSANDBOXWORKLOADMEM=1792 DEFVIRTIOFSDAEMON=${virtiofsd_binary_location} PREFIX=${deploy_path_prefix}"
+
+if [ "${CONF_PODS}" == "no" ]; then
+    runtime_make_flags+=" DEFSTATICRESOURCEMGMT_CLH=true KERNELPATH_CLH=${kernel_binary_location}"
+fi
 
 agent_make_flags="LIBC=gnu OPENSSL_NO_VENDOR=Y"
 
 if [ "${CONF_PODS}" == "yes" ]; then
     agent_make_flags+=" AGENT_POLICY=yes"
 fi
-
 
 pushd "${repo_dir}"
 
@@ -56,11 +59,11 @@ fi
 # containerd-shim-kata-(cc-)v2 binary
 pushd src/runtime/
 make clean SKIP_GO_VERSION_CHECK=1
-# TODO the Makefile is written in a way that regardless DEFSNPGUEST, the -snp/-tdx resp. non-snp/tdx configs are always created. Potential to only create -snp configs in the presence of DEFSNPGUEST
 if [ "${CONF_PODS}" == "yes" ]; then
-    make ${generic_runtime_make_flags} DEFSNPGUEST=true
+    make ${runtime_make_flags}
 else
-    make ${generic_runtime_make_flags} DEFSTATICRESOURCEMGMT_CLH=true KERNELPARAMS="systemd.legacy_systemd_cgroup_controller=yes systemd.unified_cgroup_hierarchy=0" KERNELPATH_CLH="${kernel_binary_location}"
+    #TODO cannot add the kernelparams above, quotation issue
+    make ${runtime_make_flags} KERNELPARAMS="systemd.legacy_systemd_cgroup_controller=yes systemd.unified_cgroup_hierarchy=0"
 fi
 popd
 

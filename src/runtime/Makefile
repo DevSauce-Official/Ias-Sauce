@@ -104,8 +104,8 @@ GENERATED_VARS = \
 		CONFIG_QEMU_TDX_IN \
 		CONFIG_QEMU_SNP_IN \
 		CONFIG_CLH_IN \
-		CONFIG_FC_IN \
 		CONFIG_CLH_SNP_IN \
+		CONFIG_FC_IN \
 		CONFIG_STRATOVIRT_IN \
 		CONFIG_REMOTE_IN \
 		$(USER_VARS)
@@ -273,12 +273,6 @@ DEFBINDMOUNTS := []
 
 # Image Service Offload
 DEFSERVICEOFFLOAD ?= false
-
-# SNP
-DEFSNPGUEST ?= false
-# Based on SEV Secure Nested Paging Firmware ABI Specification section 4.3
-# unspecified or == 0 --> 0x30000 i.e. Bit#17 is '1' and Bit#16 is '1' (SMT is allowed)
-DEFSNPGUESTPOLICY ?= 0x30000
 
 SED = sed
 
@@ -710,9 +704,6 @@ USER_VARS += DEFBINDMOUNTS
 USER_VARS += DEFSERVICEOFFLOAD
 USER_VARS += DEFVFIOMODE
 USER_VARS += BUILDFLAGS
-USER_VARS += DEFSNPGUESTPOLICY
-USER_VARS += DEFSNPGUEST
-
 
 V              = @
 Q              = $(V:1=)
