@@ -1,15 +1,15 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #
-all: host uvm
+all: package uvm
 
-all-confpods: host-confpods uvm-confpods
+all-confpods: package-confpods uvm-confpods
 
-host:
-	./host_builder.sh
+package:
+	./package_builder.sh
 
-host-confpods:
-	CONF_PODS=yes ./host_builder.sh
+package-confpods:
+	CONF_PODS=yes ./package_builder.sh
 
 uvm:
 	./uvm_builder.sh
