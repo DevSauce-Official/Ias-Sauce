@@ -39,26 +39,22 @@ if [ "${CONF_PODS}" == "yes" ]; then
 
     # tardev-snapshotter: utarfs binary
     pushd src/utarfs/
-    make clean
     make all
     popd
 
     # tardev-snapshotter: kata-overlay binary
     pushd src/overlay/
-    make clean
     make all
     popd
 
     # tardev-snapshotter: tardev-snapshotter binary for service
     pushd src/tardev-snapshotter/
-    make clean
     make all
     popd
 fi
 
 # containerd-shim-kata-(cc-)v2 binary
 pushd src/runtime/
-make clean SKIP_GO_VERSION_CHECK=1
 if [ "${CONF_PODS}" == "yes" ]; then
     make ${runtime_make_flags}
 else
@@ -86,7 +82,6 @@ popd
 
 # kata-agent binary
 pushd src/agent/
-make clean
 make ${agent_make_flags}
 popd
 

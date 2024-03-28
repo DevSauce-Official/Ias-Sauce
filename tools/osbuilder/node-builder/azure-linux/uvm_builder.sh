@@ -28,6 +28,10 @@ dnf install -y kata-packages-uvm-build
 
 if [ "${CONF_PODS}" == "yes" ]; then
     dnf install -y kernel-uvm-devel
+    set_uvm_kernel_vars
+    if [ -z "${UVM_KERNEL_HEADER_DIR}}" ]; then
+        exit 1
+    fi
 fi
 
 pushd "${repo_dir}"
@@ -39,7 +43,6 @@ popd
 
 # build rootfs, include agent binary
 pushd tools/osbuilder
-sudo -E PATH=$PATH make clean
 sudo -E PATH=$PATH make ${rootfs_make_flags} -B DISTRO=cbl-mariner rootfs
 ROOTFS_PATH="$(sudo readlink -f ./cbl-mariner_rootfs)"
 popd
@@ -50,25 +53,18 @@ cp ${agent_install_dir}/usr/lib/systemd/system/kata-agent.service ${ROOTFS_DIR}/
 
 if [ "${CONF_PODS}" == "yes" ]; then
     # tardev-snapshotter: tarfs kernel module/driver
-    # - first, determine UVM kernel version, header information
-    pushd /usr/src/$(ls /usr/src | grep linux-header | grep mshv)
-    header_dir=$(basename $PWD)
-    KERNEL_VER=${header_dir#"linux-headers-"}
-    KERNEL_MODULE_VER=${KERNEL_VER%%-*}
-    popd
     # - build tarfs kernel module
     pushd src/tarfs
-    make clean
-    make KDIR=/usr/src/linux-headers-${KERNEL_VER}
-    make KDIR=/usr/src/linux-headers-${KERNEL_VER} install
-    KERNEL_MODULES_DIR=$PWD/_install/lib/modules/${KERNEL_MODULE_VER}
-    KERNEL_MODULES_VER=$(basename $KERNEL_MODULES_DIR)
+    make KDIR=${UVM_KERNEL_HEADER_DIR}
+    make KDIR=${UVM_KERNEL_HEADER_DIR} install
+    UVM_KERNEL_MODULES_DIR=$PWD/_install/lib/modules/${UVM_KERNEL_MODULE_VER}
+    UVM_KERNEL_MODULES_VER=$(basename $UVM_KERNEL_MODULES_DIR)
     popd
     # - install tarfs kernel module into rootfs
     MODULE_ROOTFS_DEST_DIR="${ROOTFS_PATH}/lib/modules"
     mkdir -p ${MODULE_ROOTFS_DEST_DIR}
-    cp -a ${KERNEL_MODULES_DIR} "${MODULE_ROOTFS_DEST_DIR}/"
-    depmod -a -b ${ROOTFS_PATH} ${KERNEL_MODULES_VER}
+    cp -a ${UVM_KERNEL_MODULES_DIR} "${MODULE_ROOTFS_DEST_DIR}/"
+    depmod -a -b ${ROOTFS_PATH} ${UVM_KERNEL_MODULES_VER}
 
     # create dm-verity protected image based on rootfs
     pushd tools/osbuilder

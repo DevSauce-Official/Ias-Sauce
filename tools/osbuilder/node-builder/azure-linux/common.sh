@@ -30,3 +30,17 @@ fi
 shim_binary_path="/usr/local/bin"
 kernel_binary_location="/usr/share/cloud-hypervisor/vmlinux.bin"
 virtiofsd_binary_location="/usr/libexec/virtiofsd-rs"
+
+set_uvm_kernel_vars() {
+    local dirname=$(ls /usr/src | grep linux-header | grep mshv)
+    if [[ -z "${dirname}" ]]; then
+        echo "Could not find UVM kernel headers directory"
+        return
+    fi
+    pushd /usr/src/${dirname}
+    header_dir=$(basename $PWD)
+    UVM_KERNEL_VER=${header_dir#"linux-headers-"}
+    UVM_KERNEL_MODULE_VER=${UVM_KERNEL_VER%%-*}
+    UVM_KERNEL_HEADER_DIR="/usr/src/linux-headers-${UVM_KERNEL_VER}"
+    popd
+}

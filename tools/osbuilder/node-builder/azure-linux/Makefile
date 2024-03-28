@@ -6,16 +6,19 @@ all: clean package uvm
 all-confpods: clean package-confpods uvm-confpods
 
 package:
-    ./package_builder.sh
+	./package_builder.sh
 
 package-confpods:
-    CONF_PODS=yes ./package_builder.sh
+	CONF_PODS=yes ./package_builder.sh
 
 uvm:
-    ./uvm_builder.sh
+	./uvm_builder.sh
 
 uvm-confpods:
-    CONF_PODS=yes ./uvm_builder.sh
+	CONF_PODS=yes ./uvm_builder.sh
 
 clean:
-    ./clean.sh
+	./clean.sh
+
+clean-confpods:
+	CONF_PODS=yes ./clean.sh
