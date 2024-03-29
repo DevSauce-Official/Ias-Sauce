@@ -39,6 +39,12 @@ make clean
 popd
 
 if [ "${CONF_PODS}" == "yes" ]; then
+
+    # clean snp debug config
+    pushd src/runtime/config/
+    rm "${shim_dbg_config_file_name}"
+    popd
+
     # clean tardev-snapshotter artifacts for confpods
     pushd src/tarfs
     set_uvm_kernel_vars

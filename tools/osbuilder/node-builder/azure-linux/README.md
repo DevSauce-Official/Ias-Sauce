@@ -13,6 +13,9 @@ Reproduction can happen in various environments - the details here are omitted:
 
 The following steps assume the user has direct console access on the environnment that was set up.
 
+# Refresh the DNF cache
+```sudo dnf -y makecache```
+
 # Deploy required virtualization packages (e.g., VMM, kernel and Microsoft Hypervisor)
 
 Note: This step can be skipped if your environment was set up through `az aks create`
@@ -33,11 +36,6 @@ Reboot the system:
 
 ```sudo reboot now```
 
-# Install general build dependencies
-
-```sudo dnf install -y git vim golang rust build-essential protobuf-compiler protobuf-devel expect openssl-devel clang-devel libseccomp-devel parted qemu-img btrfs-progs-devel device-mapper-devel cmake fuse-devel kata-packages-uvm-build```
-
-
 # Deploy the containerd fork for Confidential Containers on AKS
 
 Note: This step can be skipped if your environment was set up through `az aks create`
@@ -47,25 +45,6 @@ We currently use a [forked version](https://github.com/microsoft/confidential-co
 This containerd version will be present when previously deploying an environment through `az aks create`. On other environments, remove the conflicting stock `containerd` and install the forked `containerd`:
 ```sudo dnf remove -y moby-containerd```
 ```sudo dnf install -y moby-containerd-cc```
-
-## Optional: Build and deploy the containerd fork from scratch
-
-```
-git clone --depth 1 --branch tardev-v1.7.7 https://github.com/microsoft/confidential-containers-containerd.git
-pushd confidential-containers-containerd/
-GODEBUG=1 make
-popd
-```
-
-Overwrite existing containerd binary, restart service:
-```
-if [ -f /usr/bin/containerd ]; then
-  sudo mv /usr/bin/containerd /usr/bin/containerd.bak
-fi
-sudo cp confidential-containers-containerd/bin/containerd /usr/bin/containerd
-
-sudo systemctl restart containerd
-```
 
 # Add Kata handler configuration snippets to containerd configuration
 
@@ -129,6 +108,34 @@ oom_score = 0
 Restart containerd:
 
 ```sudo systemctl restart containerd```
+
+# Install general build dependencies
+
+```sudo dnf install -y git vim golang rust build-essential protobuf-compiler protobuf-devel expect openssl-devel clang-devel libseccomp-devel parted qemu-img btrfs-progs-devel device-mapper-devel cmake fuse-devel jq curl kata-packages-uvm-build```
+
+### TODO: add kernel-uvm-devel to kata-packages-uvm-build, or kata-containers-cc-tools
+If you intend to build the confpods UVM, install the following package:
+```sudo dnf install -y kernel-uvm-devel``
+
+## Optional: Build and deploy the containerd fork from scratch
+
+```
+git clone --depth 1 --branch tardev-v1.7.7 https://github.com/microsoft/confidential-containers-containerd.git
+pushd confidential-containers-containerd/
+GODEBUG=1 make
+popd
+```
+
+Overwrite existing containerd binary, restart service:
+```
+if [ -f /usr/bin/containerd ]; then
+  sudo mv /usr/bin/containerd /usr/bin/containerd.bak
+fi
+sudo cp confidential-containers-containerd/bin/containerd /usr/bin/containerd
+
+sudo systemctl restart containerd
+```
+
 
 # Use Kata tooling to build the Kata host and guest components
 

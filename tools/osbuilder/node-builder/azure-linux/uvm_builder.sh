@@ -24,10 +24,7 @@ if [ "${CONF_PODS}" == "yes" ]; then
     rootfs_make_flags+=" AGENT_POLICY=yes CONF_GUEST=yes AGENT_POLICY_FILE=allow-set-policy.rego"
 fi
 
-dnf install -y kata-packages-uvm-build
-
 if [ "${CONF_PODS}" == "yes" ]; then
-    dnf install -y kernel-uvm-devel
     set_uvm_kernel_vars
     if [ -z "${UVM_KERNEL_HEADER_DIR}}" ]; then
         exit 1
