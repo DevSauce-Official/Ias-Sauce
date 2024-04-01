@@ -38,9 +38,9 @@ set_uvm_kernel_vars() {
         return
     fi
     pushd /usr/src/${dirname}
-    header_dir=$(basename $PWD)
-    UVM_KERNEL_VER=${header_dir#"linux-headers-"}
-    UVM_KERNEL_MODULE_VER=${UVM_KERNEL_VER%%-*}
-    UVM_KERNEL_HEADER_DIR="/usr/src/linux-headers-${UVM_KERNEL_VER}"
+    local header_dir=$(basename $PWD)
+    local uvm_kernel_ver=${header_dir#"linux-headers-"}
+    UVM_KERNEL_MODULE_VER=${uvm_kernel_ver%%-*}
+    UVM_KERNEL_HEADER_DIR="/usr/src/linux-headers-${uvm_kernel_ver}"
     popd
 }

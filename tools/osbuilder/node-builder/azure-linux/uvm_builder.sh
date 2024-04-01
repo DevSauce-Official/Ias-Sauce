@@ -16,6 +16,9 @@ repo_dir="${script_dir}/../../../../"
 lib_file="${script_dir}/../../scripts/lib.sh"
 source "${lib_file}"
 
+common_file="common.sh"
+source "${common_file}"
+
 agent_install_dir="${script_dir}/agent-install"
 
 rootfs_make_flags="AGENT_SOURCE_BIN=${agent_install_dir}/usr/bin/kata-agent"
@@ -34,34 +37,27 @@ fi
 pushd "${repo_dir}"
 
 pushd src/agent/
-rm -rf ${agent_install_dir}
-make install DESTDIR=${agent_install_dir}
+make install LIBC=gnu DESTDIR=${agent_install_dir}
 popd
 
 # build rootfs, include agent binary
 pushd tools/osbuilder
+# TODO requires sudo cause of dnf-installing packages into rootfs. As a suite, following commands require sudo as well as make clean
 sudo -E PATH=$PATH make ${rootfs_make_flags} -B DISTRO=cbl-mariner rootfs
-ROOTFS_PATH="$(sudo readlink -f ./cbl-mariner_rootfs)"
+ROOTFS_PATH="$(readlink -f ./cbl-mariner_rootfs)"
 popd
 
 # add agent service files
-cp ${agent_install_dir}/usr/lib/systemd/system/kata-containers.target  ${ROOTFS_DIR}/usr/lib/systemd/system/kata-containers.target
-cp ${agent_install_dir}/usr/lib/systemd/system/kata-agent.service ${ROOTFS_DIR}/usr/lib/systemd/system/kata-agent.service
+sudo cp ${agent_install_dir}/usr/lib/systemd/system/kata-containers.target ${ROOTFS_PATH}/usr/lib/systemd/system/kata-containers.target
+sudo cp ${agent_install_dir}/usr/lib/systemd/system/kata-agent.service ${ROOTFS_PATH}/usr/lib/systemd/system/kata-agent.service
 
 if [ "${CONF_PODS}" == "yes" ]; then
     # tardev-snapshotter: tarfs kernel module/driver
     # - build tarfs kernel module
     pushd src/tarfs
     make KDIR=${UVM_KERNEL_HEADER_DIR}
-    make KDIR=${UVM_KERNEL_HEADER_DIR} install
-    UVM_KERNEL_MODULES_DIR=$PWD/_install/lib/modules/${UVM_KERNEL_MODULE_VER}
-    UVM_KERNEL_MODULES_VER=$(basename $UVM_KERNEL_MODULES_DIR)
+    sudo make KDIR=${UVM_KERNEL_HEADER_DIR} KVER=${UVM_KERNEL_MODULE_VER} INSTALL_MOD_PATH=${ROOTFS_PATH} install
     popd
-    # - install tarfs kernel module into rootfs
-    MODULE_ROOTFS_DEST_DIR="${ROOTFS_PATH}/lib/modules"
-    mkdir -p ${MODULE_ROOTFS_DEST_DIR}
-    cp -a ${UVM_KERNEL_MODULES_DIR} "${MODULE_ROOTFS_DEST_DIR}/"
-    depmod -a -b ${ROOTFS_PATH} ${UVM_KERNEL_MODULES_VER}
 
     # create dm-verity protected image based on rootfs
     pushd tools/osbuilder
@@ -70,7 +66,8 @@ if [ "${CONF_PODS}" == "yes" ]; then
 
     # create IGVM and UVM measurement files
     pushd tools/osbuilder
-    sudo -E PATH=$PATH make igvm
+    sudo chmod o+r root_hash.txt
+    make igvm DISTRO=cbl-mariner
     popd
 else
     # create initrd based on rootfs

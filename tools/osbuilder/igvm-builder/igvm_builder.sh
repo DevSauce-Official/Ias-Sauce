@@ -21,15 +21,31 @@ build_igvm_distro()
 
   [ -d "${distro_config_dir}" ] || die "Could not find configuration directory '${distro_config_dir}'"
 
-  # Source config.sh from distro
-  igvm_config="${distro_config_dir}/${CONFIG_SH}"
-  source "${igvm_config}"
-
-  if [ -e "${distro_config_dir}/${LIB_SH}" ];then
+  if [ -e "${distro_config_dir}/${LIB_SH}" ]; then
     igvm_lib="${distro_config_dir}/${LIB_SH}"
     echo "igvm_lib.sh file found. Loading content"
     source "${igvm_lib}"
   fi
+
+  root_hash_file="${script_dir}/../root_hash.txt"
+
+  if [ ! -f "${root_hash_file}" ]; then
+    echo "Could no find image root hash file '${root_hash_file}', aborting"
+    exit 1
+  fi
+
+  # store root hash values to use in kernel command line
+  root_hash=$(sed -e 's/Root hash:\s*//g;t;d' "${root_hash_file}")
+  salt=$(sed -e 's/Salt:\s*//g;t;d' "${root_hash_file}")
+  data_blocks=$(sed -e 's/Data blocks:\s*//g;t;d' "${root_hash_file}")
+  data_block_size=$(sed -e 's/Data block size:\s*//g;t;d' "${root_hash_file}")
+  data_sectors_per_block=$((data_block_size / 512))
+  data_sectors=$((data_blocks * data_sectors_per_block))
+  hash_block_size=$(sed -e 's/Hash block size:\s*//g;t;d' "${root_hash_file}")
+
+  # Source config.sh from distro, depends on root_hash based variables here
+  igvm_config="${distro_config_dir}/${CONFIG_SH}"
+  source "${igvm_config}"
 
   install_igvm
 
@@ -40,7 +56,12 @@ build_igvm_distro()
 
   python3 igvm/igvmgen.py $igvm_vars -o kata-containers-igvm.img -measurement_file igvm-measurement.cose -append "$igvm_kernel_prod_params" -svn $SVN
   python3 igvm/igvmgen.py $igvm_vars -o kata-containers-igvm-debug.img -measurement_file igvm-debug-measurement.cose -append "$igvm_kernel_debug_params" -svn $SVN
-  mv igvm-measurement.cose kata-containers-igvm.img igvm-debug-measurement.cose kata-containers-igvm-debug.img $OUT_DIR
+
+  if [ "${PWD}" -ef "$(readlink -f $OUT_DIR)" ]; then
+    echo "OUT_DIR matches with current dir, not moving build artifacts"
+  else
+    mv igvm-measurement.cose kata-containers-igvm.img igvm-debug-measurement.cose kata-containers-igvm-debug.img $OUT_DIR
+  fi
 
   popd
 }
@@ -71,5 +92,6 @@ echo "-- distro -> $distro"
 if [ -n "$distro" ]; then
   build_igvm_distro
 else
-  die "distro must be specified"
+  echo "distro must be specified"
+  exit 1
 fi

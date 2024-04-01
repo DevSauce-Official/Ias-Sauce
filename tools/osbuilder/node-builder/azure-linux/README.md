@@ -128,14 +128,9 @@ popd
 
 Overwrite existing containerd binary, restart service:
 ```
-if [ -f /usr/bin/containerd ]; then
-  sudo mv /usr/bin/containerd /usr/bin/containerd.bak
-fi
-sudo cp confidential-containers-containerd/bin/containerd /usr/bin/containerd
-
+sudo cp -S .bak -b confidential-containers-containerd/bin/containerd /usr/bin/containerd
 sudo systemctl restart containerd
 ```
-
 
 # Use Kata tooling to build the Kata host and guest components
 
@@ -143,24 +138,24 @@ If these instructions are not being followed based on having cloned its hosting 
 ```git clone --depth 1 --branch mahuber/reproducible-builds https://github.com/microsoft/kata-containers.git```
 
 To build Azure Linux's kata-containers package components and UVM, run the following commands unmodified.
-To build the kata-containers-cc package components and UVM, prefix the builder scripts with `CONF_PODS=yes` or do `export CONF_PODS=yes`.
+To build the kata-containers-cc package components and UVM, suffix the make target names with `-confpods`.
 ```
 pushd kata-containers/tools/osbuilder/node-builder/azure-linux
-./clean.sh
-./package_builder.sh
-./uvm_builder.sh
+make clean
+make package
+make uvm
+popd
 ```
 
 # Install the built components
 
 In this step, we move the build artifacts to proper places and eventually restart containerd so that the new Kata(-CC) configuration files are loaded.
 The following commands refer to having built the components and UVM for Azure Linux's kata-containers package in the prior step.
-If you built the kata-containers-cc package components, insert `CONF_PODS=yes` before the deploy script call.
+If you built the kata-containers-cc package components, call the `deploy-confpods` target.
 
 ```
 pushd kata-containers/tools/osbuilder/node-builder/azure-linux
-sudo ./package_deploy.sh
-sudo ./uvm_deploy.sh
+sudo make deploy
 popd
 ```
 

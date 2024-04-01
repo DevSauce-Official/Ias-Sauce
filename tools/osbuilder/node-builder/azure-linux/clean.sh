@@ -34,15 +34,14 @@ rm -rf ${agent_install_dir}
 
 # clean rootfs, image, initrd, igvm
 pushd tools/osbuilder/
-#sudo -E PATH=$PATH make clean
-make clean
+sudo -E PATH=$PATH make DISTRO=cbl-mariner clean
 popd
 
 if [ "${CONF_PODS}" == "yes" ]; then
 
     # clean snp debug config
     pushd src/runtime/config/
-    rm "${shim_dbg_config_file_name}"
+    rm -f "${shim_dbg_config_file_name}"
     popd
 
     # clean tardev-snapshotter artifacts for confpods

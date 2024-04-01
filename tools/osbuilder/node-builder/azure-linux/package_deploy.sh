@@ -35,7 +35,7 @@ if [ "${CONF_PODS}" == "yes" ]; then
   cp -S .bak -b src/runtime/config/"${shim_config_file_name}" "${shim_config_path}"
   cp -S .bak -b src/runtime/config/"${shim_dbg_config_file_name}" "${shim_config_path}"
 
-  sudo systemctl enable tardev-snapshotter && systemctl daemon-reload && systemctl restart tardev-snapshotter
+  systemctl enable tardev-snapshotter && systemctl daemon-reload && systemctl restart tardev-snapshotter
 else
   cp -S .bak -b src/runtime/kata-monitor "${debugging_binary_path}"
   cp -S .bak -b src/runtime/kata-runtime "${debugging_binary_path}"
@@ -44,7 +44,7 @@ else
 
   cp -S .bak -b src/runtime/config/"${shim_config_file_name}" "${shim_config_path}"
 
-  sudo systemctl daemon-reload && systemctl restart containerd
+  systemctl daemon-reload && systemctl restart containerd
 fi
 
 popd

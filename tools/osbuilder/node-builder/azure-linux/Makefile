@@ -22,3 +22,11 @@ clean:
 
 clean-confpods:
 	CONF_PODS=yes ./clean.sh
+
+deploy:
+	./package_deploy.sh
+	./uvm_deploy.sh
+
+deploy-confpods:
+	CONF_PODS=yes ./package_deploy.sh
+	CONF_PODS=yes ./uvm_deploy.sh

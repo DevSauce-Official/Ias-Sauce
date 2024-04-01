@@ -2,21 +2,6 @@
 
 # this is where the kernel-uvm package installation places bzImage, see SPEC file
 bzimage_bin="/usr/share/cloud-hypervisor/bzImage"
-root_hash_file="../root_hash.txt"
-
-if [ ! -f "${root_hash_file}" ]; then
-  echo "Could no find image root hash file '${root_hash_file}', aborting"
-  exit 1
-fi
-
-# store root hash values to use in kernel command line
-root_hash=$(sed -e 's/Root hash:\s*//g;t;d' "${root_hash_file}")
-salt=$(sed -e 's/Salt:\s*//g;t;d' "${root_hash_file}")
-data_blocks=$(sed -e 's/Data blocks:\s*//g;t;d' "${root_hash_file}")
-data_block_size=$(sed -e 's/Data block size:\s*//g;t;d' "${root_hash_file}")
-data_sectors_per_block=$((data_block_size / 512))
-data_sectors=$((data_blocks * data_sectors_per_block))
-hash_block_size=$(sed -e 's/Hash block size:\s*//g;t;d' "${root_hash_file}")
 
 igvm_vars="-kernel $bzimage_bin -boot_mode x64 -vtl 0 -svme 1 -encrypted_page 1 -pvalidate_opt 1 -acpi igvm/acpi/acpi-clh/"
 
