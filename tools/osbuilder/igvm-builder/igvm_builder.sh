@@ -12,7 +12,7 @@ script_dir="$(dirname $(readlink -f $0))"
 typeset -r CONFIG_SH="config.sh"
 
 # Name of an optional distro-specific file which, if it exists, must implement the
-# build_rootfs() function.
+# install_igvm() function.
 typeset -r LIB_SH="igvm_lib.sh"
 
 build_igvm_distro()
@@ -27,7 +27,7 @@ build_igvm_distro()
 
   if [ -e "${distro_config_dir}/${LIB_SH}" ];then
     igvm_lib="${distro_config_dir}/${LIB_SH}"
-    info "igvm_lib.sh file found. Loading content"
+    echo "igvm_lib.sh file found. Loading content"
     source "${igvm_lib}"
   fi
 
@@ -36,7 +36,7 @@ build_igvm_distro()
   echo ========================
   echo === BUILD KATA IGVM  ===
   echo ========================
-  pushd igvm-tooling
+  pushd igvm-tooling/src
 
   python3 igvm/igvmgen.py $igvm_vars -o kata-containers-igvm.img -measurement_file igvm-measurement.cose -append "$igvm_kernel_prod_params" -svn $SVN
   python3 igvm/igvmgen.py $igvm_vars -o kata-containers-igvm-debug.img -measurement_file igvm-debug-measurement.cose -append "$igvm_kernel_debug_params" -svn $SVN

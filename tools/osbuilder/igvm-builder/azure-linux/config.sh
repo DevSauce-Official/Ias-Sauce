@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # this is where the kernel-uvm package installation places bzImage, see SPEC file
-bzimage_bin=/usr/share/cloud-hypervisor/bzImage
-root_hash_file=/opt/confidential-containers/uvm/tools/osbuilder/root_hash.txt
+bzimage_bin="/usr/share/cloud-hypervisor/bzImage"
+root_hash_file="../root_hash.txt"
 
 if [ ! -f "${root_hash_file}" ]; then
   echo "Could no find image root hash file '${root_hash_file}', aborting"
