@@ -9,6 +9,7 @@ ROOTFS_BUILDER := $(MK_DIR)/rootfs-builder/rootfs.sh
 INITRD_BUILDER := $(MK_DIR)/initrd-builder/initrd_builder.sh
 IMAGE_BUILDER  := $(MK_DIR)/image-builder/image_builder.sh
 IGVM_BUILDER   := $(MK_DIR)/igvm-builder/igvm_builder.sh
+IGVM_TOOL_SRC  :=  $(MK_DIR)/igvm-builder/igvm-tooling
 
 DISTRO                ?= ubuntu
 BUILD_METHOD          := distro
@@ -163,8 +164,7 @@ $(DRACUT_OVERLAY_DIR):
 	echo $(DRACUT_KMODULES) | tr " " "\n" > $@/etc/modules-load.d/kata-modules.conf
 
 .PHONY: igvm
-igvm: $(TARGET_IMAGE) $(TARGET_IGVM) $(TARGET_IGVM_DEBUG) $(TARGET_IGVM_MSMT) $(TARGET_IGVM_DEBUG_MSMT)
-$(TARGET_IGVM) $(TARGET_IGVM_DEBUG) $(TARGET_IGVM_MSMT) $(TARGET_IGVM_DEBUG_MSMT):
+igvm: $(TARGET_IMAGE) $(TARGET_IGVM) $(TARGET_IGVM_DEBUG) $(TARGET_IGVM_MSMT) $(TARGET_IGVM_DEBUG_MSMT) $(TARGET_IGVM) $(TARGET_IGVM_DEBUG) $(TARGET_IGVM_MSMT) $(TARGET_IGVM_DEBUG_MSMT)
 	$(IGVM_BUILDER) -o ./ -s 0
 
 .PHONY: test
@@ -219,7 +219,7 @@ install-scripts:
 
 .PHONY: clean
 clean:
-	rm -rf $(TARGET_ROOTFS_MARKER) $(TARGET_ROOTFS) $(TARGET_IMAGE) $(TARGET_INITRD) $(DRACUT_OVERLAY_DIR) $(TARGET_IGVM) $(TARGET_IGVM_DEBUG) $(TARGET_IGVM_MSMT) $(TARGET_IGVM_DEBUG_MSMT)
+	rm -rf $(TARGET_ROOTFS_MARKER) $(TARGET_ROOTFS) $(TARGET_IMAGE) $(TARGET_INITRD) $(DRACUT_OVERLAY_DIR) $(TARGET_IGVM) $(TARGET_IGVM_DEBUG) $(TARGET_IGVM_MSMT) $(TARGET_IGVM_DEBUG_MSMT) $(IGVM_TOOL_SRC)
 
 # Prints the name of the variable passed as suffix to the print- target,
 # E.g., if Makefile contains:

@@ -19,7 +19,7 @@ build_igvm_distro()
 {
   distro_config_dir="${script_dir}/${distro}"
 
-  [ -d "${distro_config_dir}" ] || die "Not found configuration directory ${distro_config_dir}"
+  [ -d "${distro_config_dir}" ] || die "Could not find configuration directory '${distro_config_dir}'"
 
   # Source config.sh from distro
   igvm_config="${distro_config_dir}/${CONFIG_SH}"

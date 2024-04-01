@@ -4,6 +4,11 @@
 bzimage_bin=/usr/share/cloud-hypervisor/bzImage
 root_hash_file=/opt/confidential-containers/uvm/tools/osbuilder/root_hash.txt
 
+if [ ! -f "${root_hash_file}" ]; then
+  echo "Could no find image root hash file '${root_hash_file}', aborting"
+  exit 1
+fi
+
 # store root hash values to use in kernel command line
 root_hash=$(sed -e 's/Root hash:\s*//g;t;d' "${root_hash_file}")
 salt=$(sed -e 's/Salt:\s*//g;t;d' "${root_hash_file}")
