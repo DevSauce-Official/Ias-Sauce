@@ -52,18 +52,18 @@ build_igvm_distro()
   echo ========================
   echo === BUILD KATA IGVM  ===
   echo ========================
-  pushd igvm-tooling/src
-
-  python3 igvm/igvmgen.py $igvm_vars -o kata-containers-igvm.img -measurement_file igvm-measurement.cose -append "$igvm_kernel_prod_params" -svn $SVN
-  python3 igvm/igvmgen.py $igvm_vars -o kata-containers-igvm-debug.img -measurement_file igvm-debug-measurement.cose -append "$igvm_kernel_debug_params" -svn $SVN
+  # we could call into the installed binary '~/.local/bin/igvmgen' when adding to PATH or, better, into 'python3 -m msigvm'
+  # as we still need the installation directory for the ACPI tables, we leave things as is for now
+  # at the same time we seem to need to call pip3 install for the python module. Otherwhise this command would fail.
+  # we should address this through proper packaging
+  python3 ${igvmgen_py_file} $igvm_vars -o kata-containers-igvm.img -measurement_file igvm-measurement.cose -append "$igvm_kernel_prod_params" -svn $SVN
+  python3 ${igvmgen_py_file} $igvm_vars -o kata-containers-igvm-debug.img -measurement_file igvm-debug-measurement.cose -append "$igvm_kernel_debug_params" -svn $SVN
 
   if [ "${PWD}" -ef "$(readlink -f $OUT_DIR)" ]; then
     echo "OUT_DIR matches with current dir, not moving build artifacts"
   else
     mv igvm-measurement.cose kata-containers-igvm.img igvm-debug-measurement.cose kata-containers-igvm-debug.img $OUT_DIR
   fi
-
-  popd
 }
 
 echo ====================

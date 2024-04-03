@@ -221,7 +221,9 @@ install-scripts:
 
 .PHONY: clean
 clean:
-	rm -rf $(TARGET_ROOTFS_MARKER) $(TARGET_ROOTFS) $(TARGET_IMAGE) $(TARGET_INITRD) $(DRACUT_OVERLAY_DIR) $(TARGET_IGVM) $(TARGET_IGVM_DEBUG) $(TARGET_IGVM_MSMT) $(TARGET_IGVM_DEBUG_MSMT) $(IGVM_TOOL_SRC)
+	rm -rf $(TARGET_ROOTFS_MARKER) $(TARGET_ROOTFS) $(TARGET_IMAGE) $(TARGET_INITRD) $(DRACUT_OVERLAY_DIR) $(TARGET_IGVM) $(TARGET_IGVM_DEBUG) $(TARGET_IGVM_MSMT) $(TARGET_IGVM_DEBUG_MSMT)
+	rm -rf $(IGVM_TOOL_SRC)
+	pip3 uninstall -y msigvm
 
 # Prints the name of the variable passed as suffix to the print- target,
 # E.g., if Makefile contains:
