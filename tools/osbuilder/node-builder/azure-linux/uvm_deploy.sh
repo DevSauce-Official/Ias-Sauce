@@ -23,13 +23,13 @@ pushd "${repo_dir}"
 
 pushd tools/osbuilder
 if [ "${CONF_PODS}" == "yes" ]; then
-  cp -S .bak -b "${img_file_name}" "${uvm_path}"
-  cp -S .bak -b igvm-builder/"${igvm_file_name}" "${uvm_path}"
-  cp -S .bak -b igvm-builder/"${igvm_dbg_file_name}" "${uvm_path}"
-  cp -S .bak -b igvm-builder/"${uvm_measurement_file_name}" "${uvm_path}"
-  cp -S .bak -b igvm-builder/"${uvm_dbg_measurement_file_name}" "${uvm_path}"
+	cp -S .bak -b "${img_file_name}" "${uvm_path}"
+	cp -S .bak -b igvm-builder/"${igvm_file_name}" "${uvm_path}"
+	cp -S .bak -b igvm-builder/"${igvm_dbg_file_name}" "${uvm_path}"
+	cp -S .bak -b igvm-builder/"${uvm_measurement_file_name}" "${uvm_path}"
+	cp -S .bak -b igvm-builder/"${uvm_dbg_measurement_file_name}" "${uvm_path}"
 else
-  cp -S .bak -b "${initrd_file_name}" "${uvm_path}"
+	cp -S .bak -b "${initrd_file_name}" "${uvm_path}"
 fi
 popd
 

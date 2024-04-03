@@ -39,30 +39,30 @@ popd
 
 if [ "${CONF_PODS}" == "yes" ]; then
 
-    # clean snp debug config
-    pushd src/runtime/config/
-    rm -f "${shim_dbg_config_file_name}"
-    popd
+	# clean snp debug config
+	pushd src/runtime/config/
+	rm -f "${shim_dbg_config_file_name}"
+	popd
 
-    # clean tardev-snapshotter artifacts for confpods
-    pushd src/tarfs
-    set_uvm_kernel_vars
-    if [ -n "${UVM_KERNEL_HEADER_DIR}" ]; then
-        make clean KDIR=${UVM_KERNEL_HEADER_DIR}
-    fi
-    popd
+	# clean tardev-snapshotter artifacts for confpods
+	pushd src/tarfs
+	set_uvm_kernel_vars
+	if [ -n "${UVM_KERNEL_HEADER_DIR}" ]; then
+		make clean KDIR=${UVM_KERNEL_HEADER_DIR}
+	fi
+	popd
 
-    pushd src/utarfs/
-    make clean
-    popd
+	pushd src/utarfs/
+	make clean
+	popd
 
-    pushd src/overlay/
-    make clean
-    popd
+	pushd src/overlay/
+	make clean
+	popd
 
-    pushd src/tardev-snapshotter/
-    make clean
-    popd
+	pushd src/tardev-snapshotter/
+	make clean
+	popd
 fi
 
 popd

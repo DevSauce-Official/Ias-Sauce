@@ -24,14 +24,14 @@ agent_install_dir="${script_dir}/agent-install"
 rootfs_make_flags="AGENT_SOURCE_BIN=${agent_install_dir}/usr/bin/kata-agent"
 
 if [ "${CONF_PODS}" == "yes" ]; then
-    rootfs_make_flags+=" AGENT_POLICY=yes CONF_GUEST=yes AGENT_POLICY_FILE=allow-set-policy.rego"
+	rootfs_make_flags+=" AGENT_POLICY=yes CONF_GUEST=yes AGENT_POLICY_FILE=allow-set-policy.rego"
 fi
 
 if [ "${CONF_PODS}" == "yes" ]; then
-    set_uvm_kernel_vars
-    if [ -z "${UVM_KERNEL_HEADER_DIR}}" ]; then
-        exit 1
-    fi
+	set_uvm_kernel_vars
+	if [ -z "${UVM_KERNEL_HEADER_DIR}}" ]; then
+		exit 1
+	fi
 fi
 
 pushd "${repo_dir}"
@@ -52,28 +52,28 @@ sudo cp ${agent_install_dir}/usr/lib/systemd/system/kata-containers.target ${ROO
 sudo cp ${agent_install_dir}/usr/lib/systemd/system/kata-agent.service ${ROOTFS_PATH}/usr/lib/systemd/system/kata-agent.service
 
 if [ "${CONF_PODS}" == "yes" ]; then
-    # tardev-snapshotter: tarfs kernel module/driver
-    # - build tarfs kernel module
-    pushd src/tarfs
-    make KDIR=${UVM_KERNEL_HEADER_DIR}
-    sudo make KDIR=${UVM_KERNEL_HEADER_DIR} KVER=${UVM_KERNEL_MODULE_VER} INSTALL_MOD_PATH=${ROOTFS_PATH} install
-    popd
+	# tardev-snapshotter: tarfs kernel module/driver
+	# - build tarfs kernel module
+	pushd src/tarfs
+	make KDIR=${UVM_KERNEL_HEADER_DIR}
+	sudo make KDIR=${UVM_KERNEL_HEADER_DIR} KVER=${UVM_KERNEL_MODULE_VER} INSTALL_MOD_PATH=${ROOTFS_PATH} install
+	popd
 
-    # create dm-verity protected image based on rootfs
-    pushd tools/osbuilder
-    sudo -E PATH=$PATH make DISTRO=cbl-mariner MEASURED_ROOTFS=yes DM_VERITY_FORMAT=kernelinit image
-    popd
+	# create dm-verity protected image based on rootfs
+	pushd tools/osbuilder
+	sudo -E PATH=$PATH make DISTRO=cbl-mariner MEASURED_ROOTFS=yes DM_VERITY_FORMAT=kernelinit image
+	popd
 
-    # create IGVM and UVM measurement files
-    pushd tools/osbuilder
-    sudo chmod o+r root_hash.txt
-    make igvm DISTRO=cbl-mariner
-    popd
+	# create IGVM and UVM measurement files
+	pushd tools/osbuilder
+	sudo chmod o+r root_hash.txt
+	make igvm DISTRO=cbl-mariner
+	popd
 else
-    # create initrd based on rootfs
-    pushd tools/osbuilder
-    sudo -E PATH=$PATH make DISTRO=cbl-mariner TARGET_ROOTFS=${ROOTFS_PATH} initrd
-    popd
+	# create initrd based on rootfs
+	pushd tools/osbuilder
+	sudo -E PATH=$PATH make DISTRO=cbl-mariner TARGET_ROOTFS=${ROOTFS_PATH} initrd
+	popd
 fi
 
 popd
