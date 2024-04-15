@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tester
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: tester
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: tester
+      annotations:
+        io.katacontainers.config.agent.policy: cGFja2FnZSBhZ2VudF9wb2xpY3kKCmltcG9ydCBmdXR1cmUua2V5d29yZHMuaW4KaW1wb3J0IGZ1dHVyZS5rZXl3b3Jkcy5ldmVyeQoKaW1wb3J0IGlucHV0CgojIERlZmF1bHQgdmFsdWVzLCByZXR1cm5lZCBieSBPUEEgd2hlbiBydWxlcyBjYW5ub3QgYmUgZXZhbHVhdGVkIHRvIHRydWUuCmRlZmF1bHQgQ29weUZpbGVSZXF1ZXN0IDo9IGZhbHNlCmRlZmF1bHQgQ3JlYXRlQ29udGFpbmVyUmVxdWVzdCA6PSBmYWxzZQpkZWZhdWx0IENyZWF0ZVNhbmRib3hSZXF1ZXN0IDo9IGZhbHNlCmRlZmF1bHQgRGVzdHJveVNhbmRib3hSZXF1ZXN0IDo9IHRydWUKZGVmYXVsdCBFeGVjUHJvY2Vzc1JlcXVlc3QgOj0gdHJ1ZQpkZWZhdWx0IEdldE9PTUV2ZW50UmVxdWVzdCA6PSB0cnVlCmRlZmF1bHQgR3Vlc3REZXRhaWxzUmVxdWVzdCA6PSB0cnVlCmRlZmF1bHQgT25saW5lQ1BVTWVtUmVxdWVzdCA6PSB0cnVlCmRlZmF1bHQgUHVsbEltYWdlUmVxdWVzdCA6PSB0cnVlCmRlZmF1bHQgUmVhZFN0cmVhbVJlcXVlc3QgOj0gZmFsc2UKZGVmYXVsdCBSZW1vdmVDb250YWluZXJSZXF1ZXN0IDo9IHRydWUKZGVmYXVsdCBSZW1vdmVTdGFsZVZpcnRpb2ZzU2hhcmVNb3VudHNSZXF1ZXN0IDo9IHRydWUKZGVmYXVsdCBTaWduYWxQcm9jZXNzUmVxdWVzdCA6PSB0cnVlCmRlZmF1bHQgU3RhcnRDb250YWluZXJSZXF1ZXN0IDo9IHRydWUKZGVmYXVsdCBTdGF0c0NvbnRhaW5lclJlcXVlc3QgOj0gdHJ1ZQpkZWZhdWx0IFR0eVdpblJlc2l6ZVJlcXVlc3QgOj0gdHJ1ZQpkZWZhdWx0IFVwZGF0ZUVwaGVtZXJhbE1vdW50c1JlcXVlc3QgOj0gZmFsc2UKZGVmYXVsdCBVcGRhdGVJbnRlcmZhY2VSZXF1ZXN0IDo9IHRydWUKZGVmYXVsdCBVcGRhdGVSb3V0ZXNSZXF1ZXN0IDo9IHRydWUKZGVmYXVsdCBXYWl0UHJvY2Vzc1JlcXVlc3QgOj0gdHJ1ZQpkZWZhdWx0IFdyaXRlU3RyZWFtUmVxdWVzdCA6PSBmYWxzZQoKIyBBbGxvd1JlcXVlc3RzRmFpbGluZ1BvbGljeSA6PSB0cnVlIGNvbmZpZ3VyZXMgdGhlIEFnZW50IHRvICphbGxvdyBhbnkKIyByZXF1ZXN0cyBjYXVzaW5nIGEgcG9saWN5IGZhaWx1cmUqLiBUaGlzIGlzIGFuIHVuc2VjdXJlIGNvbmZpZ3VyYXRpb24KIyBidXQgaXMgdXNlZnVsIGZvciBhbGxvd2luZyB1bnNlY3VyZSBwb2RzIHRvIHN0YXJ0LCB0aGVuIGNvbm5lY3QgdG8KIyB0aGVtIGFuZCBpbnNwZWN0IE9QQSBsb2dzIGZvciB0aGUgcm9vdCBjYXVzZSBvZiBhIGZhaWx1cmUuCmRlZmF1bHQgQWxsb3dSZXF1ZXN0c0ZhaWxpbmdQb2xpY3kgOj0gdHJ1ZQo=
+    spec:
+      runtimeClassName: kata-cc
+      containers:
+        - image: burgerdev.azurecr.io/burgerdev/layers:1
+          name: layers
+          command:
+            - /bin/sh
+            - -c
+            - while true; do sleep 100; done
+
