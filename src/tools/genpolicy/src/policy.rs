@@ -29,7 +29,7 @@ use std::fs::read_to_string;
 use std::io::Write;
 
 // TODO: load this value from the settings file.
-const DEFAULT_OCI_VERSION: &str = "1.1.0-rc.1";
+const DEFAULT_OCI_VERSION: &str = "1.1.0";
 
 /// Intermediary format of policy data.
 pub struct AgentPolicy {

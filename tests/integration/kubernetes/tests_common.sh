@@ -264,10 +264,7 @@ set_namespace_to_policy_settings() {
 }
 
 policy_tests_enabled() {
-	# The Guest images for these platforms have been built using AGENT_POLICY=yes -
-	# see kata-deploy-binaries.sh.
-	[ "${KATA_HYPERVISOR}" == "qemu-sev" ] || [ "${KATA_HYPERVISOR}" == "qemu-snp" ] || \
-		[ "${KATA_HYPERVISOR}" == "qemu-tdx" ] || [ "${KATA_HOST_OS}" == "cbl-mariner" ]
+	return 0
 }
 
 add_allow_all_policy_to_yaml() {
