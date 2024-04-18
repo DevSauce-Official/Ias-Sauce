@@ -138,14 +138,14 @@ test_pod_policy_error() {
 
 	command="kubectl describe pod ${pod_name} | grep FailedPostStartHook"
 	info "Waiting ${wait_time} seconds for: ${command}"
-	waitForProcess "${wait_time}" "$sleep_time" "${command}"
+	waitForProcess "${wait_time}" "$sleep_time" "${command}" >/dev/null 2>/dev/null
 }
 
 teardown() {
 	policy_tests_enabled || skip "Policy tests are disabled."
 
-	# Debugging information
-	kubectl describe pod "${pod_name}"
+	# Debugging information. Don't print the "Message:" line because it contains a truncated policy log.
+	kubectl describe pod "${pod_name}" | grep -v "Message:"
 
 	# Clean-up
 	kubectl delete pod "${pod_name}"
