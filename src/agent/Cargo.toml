@@ -73,14 +73,12 @@ clap = { version = "3.0.1", features = ["derive"] }
 strum = "0.26.2"
 strum_macros = "0.26.2"
 
-# Communication with the OPA service
-http = { version = "0.2.8", optional = true }
-reqwest = { version = "0.11.14", optional = true }
-# The "vendored" feature for openssl is required for musl build
-openssl = { version = "0.10.54", features = ["vendored"], optional = true }
-
 # Image pull/decrypt
 image-rs = { git = "https://github.com/confidential-containers/guest-components", rev = "ca6b438", default-features = true, optional = true }
+openssl = { version = "0.10.54", features = ["vendored"], optional = true }
+
+# Agent Policy
+regorus = { git = "https://github.com/danmihai1/regorus", rev = "5f5bb3e", default-features = false, features = ["arc", "regex"], optional = true }
 
 [dev-dependencies]
 tempfile = "3.1.0"
@@ -100,7 +98,7 @@ lto = true
 default-pull = ["guest-pull"]
 seccomp = ["rustjail/seccomp"]
 standard-oci-runtime = ["rustjail/standard-oci-runtime"]
-agent-policy = ["http", "openssl", "reqwest"]
+agent-policy = ["regorus"]
 guest-pull = ["image-rs", "openssl"]
 
 [[bin]]
