@@ -7,8 +7,8 @@ install_igvm()
 		return
 	fi
 
-	# the igvm tool on mariner will soon be installed through dnf via kata-packages-uvm-build
-	# even though installing, we cannot delete the source folder as the ACPI tables are not being installed anywhere
+	# the igvm tool on mariner will soon be properly installed through dnf via kata-packages-uvm-build
+	# as of now, even when installing with pip3, we cannot delete the source folder as the ACPI tables are not being installed anywhere, hence relying on this folder
 	IGVM_VER=$(curl -sL "https://api.github.com/repos/microsoft/igvm-tooling/releases/latest" | jq -r .tag_name | sed 's/^v//')
 	curl -sL "https://github.com/microsoft/igvm-tooling/archive/refs/tags/${IGVM_VER}.tar.gz" | tar --no-same-owner -xz
 	mv igvm-tooling-${IGVM_VER} ${igvm_extract_folder}
