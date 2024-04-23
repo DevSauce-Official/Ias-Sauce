@@ -22,29 +22,20 @@ source "${common_file}"
 pushd "${repo_dir}"
 
 if [ "${CONF_PODS}" == "yes" ]; then
-	cp -S .bak -b src/utarfs/target/release/utarfs /usr/sbin/mount.tar
-	cp -S .bak -b src/overlay/target/release/kata-overlay /usr/bin/
-	cp -S .bak -b src/tardev-snapshotter/target/release/tardev-snapshotter /usr/bin/
-	cp -S .bak -b src/tardev-snapshotter/tardev-snapshotter.service /usr/lib/systemd/system/
+	cp -a -S .bak -b src/utarfs/target/release/utarfs /usr/sbin/mount.tar
+	cp -a -S .bak -b src/overlay/target/release/kata-overlay /usr/bin/
+	cp -a -S .bak -b src/tardev-snapshotter/target/release/tardev-snapshotter /usr/bin/
+	cp -a -S .bak -b src/tardev-snapshotter/tardev-snapshotter.service /usr/lib/systemd/system/
 
-	cp -S .bak -b src/runtime/kata-monitor "${debugging_binary_path}"
-	cp -S .bak -b src/runtime/kata-runtime "${debugging_binary_path}"
-	cp -S .bak -b src/runtime/kata-collect-data.sh "${debugging_binary_path}"
-	cp -S .bak -b src/runtime/containerd-shim-kata-v2 "${shim_binary_path}"/"${shim_binary_name}"
-
-	cp -S .bak -b src/runtime/config/"${shim_config_file_name}" "${shim_config_path}"
-	cp -S .bak -b src/runtime/config/"${shim_dbg_config_file_name}" "${shim_config_path}"
+	cp -a -S .bak -b src/runtime/config/"${shim_dbg_config_file_name}" "${shim_config_path}"
 
 	systemctl enable tardev-snapshotter && systemctl daemon-reload && systemctl restart tardev-snapshotter
-else
-	cp -S .bak -b src/runtime/kata-monitor "${debugging_binary_path}"
-	cp -S .bak -b src/runtime/kata-runtime "${debugging_binary_path}"
-	cp -S .bak -b src/runtime/kata-collect-data.sh "${debugging_binary_path}"
-	cp -S .bak -b src/runtime/containerd-shim-kata-v2 "${shim_binary_path}"/"${shim_binary_name}"
-
-	cp -S .bak -b src/runtime/config/"${shim_config_file_name}" "${shim_config_path}"
-
-	systemctl daemon-reload && systemctl restart containerd
 fi
+	cp -a -S .bak -b src/runtime/kata-monitor "${debugging_binaries_path}"
+	cp -a -S .bak -b src/runtime/kata-runtime "${debugging_binaries_path}"
+	cp -a -S .bak -b src/runtime/data/kata-collect-data.sh "${debugging_binaries_path}"
+	cp -a -S .bak -b src/runtime/containerd-shim-kata-v2 "${shim_binary_path}"
+
+	cp -a -S .bak -b src/runtime/config/"${shim_config_file_name}" "${shim_config_path}"
 
 popd

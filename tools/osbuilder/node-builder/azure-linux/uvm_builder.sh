@@ -56,7 +56,7 @@ if [ "${CONF_PODS}" == "yes" ]; then
 	# - build tarfs kernel module
 	pushd src/tarfs
 	make KDIR=${UVM_KERNEL_HEADER_DIR}
-	sudo make KDIR=${UVM_KERNEL_HEADER_DIR} KVER=${UVM_KERNEL_MODULE_VER} INSTALL_MOD_PATH=${ROOTFS_PATH} install
+	sudo make KDIR=${UVM_KERNEL_HEADER_DIR} KVER=${UVM_KERNEL_VERSION} INSTALL_MOD_PATH=${ROOTFS_PATH} install
 	popd
 
 	# create dm-verity protected image based on rootfs
