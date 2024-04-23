@@ -138,7 +138,6 @@ If these instructions are not being followed based on having cloned its hosting 
 ```git clone --depth 1 --branch mahuber/reproducible-builds https://github.com/microsoft/kata-containers.git```
 
 To build Azure Linux's kata-containers package components and UVM, run the following commands unmodified.
-To build the kata-containers-cc package components and UVM, suffix the make target names with `-confpods`.
 ```
 pushd kata-containers/tools/osbuilder/node-builder/azure-linux
 make clean
@@ -146,6 +145,8 @@ make package
 make uvm
 popd
 ```
+To build the kata-containers-cc package components and UVM, suffix the make target names with `-confpods`.
+To run the clean, package and uvm targets in a single step, run `make all`, resp., `make all-confpods`
 
 # Install the built components
 
