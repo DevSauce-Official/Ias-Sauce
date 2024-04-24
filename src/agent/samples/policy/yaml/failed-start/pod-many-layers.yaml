@@ -1,0 +1,41 @@
+---
+# This pod fails to start if Kata debug features are enabled.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: failing-many-layers
+spec:
+  terminationGracePeriodSeconds: 0
+  restartPolicy: Never
+  runtimeClassName: kata-cc
+  containers:
+    - name: azure-vote-front
+      image: "mcr.microsoft.com/azuredocs/azure-vote-front:v1"
+      command:
+        - sh
+        - "-c"
+        - while true; do echo hello; sleep 10; done
+    - name: mariner-cli
+      image: "mcr.microsoft.com/azure-cli:2.58.0-cbl-mariner2.0-amd64"
+      command:
+        - sh
+        - "-c"
+        - while true; do az --help; sleep 15; done
+    - name: nginx
+      image: "mcr.microsoft.com/cbl-mariner/base/nginx:1.22.1-9-cm2.0.20230904-amd64"
+      command:
+        - sh
+        - "-c"
+        - while true; do echo nginx; sleep 10; done
+    - name: redis
+      image: "mcr.microsoft.com/oss/bitnami/redis:6.0.8"
+      command:
+        - sh
+        - "-c"
+        - while true; do echo redis; sleep 20; done
+    - name: go
+      image: "mcr.microsoft.com/appsvc/go:1.19-bullseye_20230324.1"
+      command:
+        - sh
+        - "-c"
+        - while true; do echo go; sleep 25; done
