@@ -185,6 +185,8 @@ auto_generate_policy() {
 		genpolicy_command+=" -d"
 	fi
 
+	genpolicy_command+=" -d -r > /tmp/test.rego"
+
 	info "Executing: ${genpolicy_command}"
 	eval "${genpolicy_command}"
 }
