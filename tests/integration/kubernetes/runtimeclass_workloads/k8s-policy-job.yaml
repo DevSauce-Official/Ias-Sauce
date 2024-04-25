@@ -18,8 +18,7 @@ spec:
           command: ["/bin/sh"]
           args:
             - "-c"
-            - echo
-            - hello
+            - "sleep 120"
           env:
             - name: var1
               value: val1
