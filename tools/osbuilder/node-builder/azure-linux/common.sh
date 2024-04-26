@@ -14,7 +14,8 @@ if [ "${CONF_PODS}" == "yes" ]; then
 	shim_config_file_name="configuration-clh-snp.toml"
 	shim_dbg_config_file_name="configuration-clh-snp-debug.toml"
 	debugging_binaries_path="${deploy_path_prefix}/bin"
-	shim_binary_path="/usr/local/bin/containerd-shim-kata-cc-v2"
+	shim_binary_path="/usr/local/bin"
+	shim_binary_name="containerd-shim-kata-cc-v2"
 else
 	deploy_path_prefix="/usr"
 	uvm_path="/var/cache/kata-containers/osbuilder-images/kernel-uvm"
@@ -22,7 +23,8 @@ else
 	shim_config_path="${deploy_path_prefix}/share/defaults/kata-containers"
 	shim_config_file_name="configuration-clh.toml"
 	debugging_binaries_path="${deploy_path_prefix}/local/bin"
-	shim_binary_path="${deploy_path_prefix}/local/bin/containerd-shim-kata-v2"
+	shim_binary_path="${deploy_path_prefix}/local/bin"
+	shim_binary_name="containerd-shim-kata-v2"
 fi
 
 kernel_binary_location="/usr/share/cloud-hypervisor/vmlinux.bin"

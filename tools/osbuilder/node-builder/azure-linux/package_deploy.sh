@@ -21,6 +21,10 @@ source "${common_file}"
 
 pushd "${repo_dir}"
 
+mkdir -p "${shim_config_path}"
+mkdir -p "${debugging_binaries_path}"
+mkdir -p "${shim_binary_path}"
+
 if [ "${CONF_PODS}" == "yes" ]; then
 	cp -a -S .bak -b src/utarfs/target/release/utarfs /usr/sbin/mount.tar
 	cp -a -S .bak -b src/overlay/target/release/kata-overlay /usr/bin/
@@ -31,11 +35,12 @@ if [ "${CONF_PODS}" == "yes" ]; then
 
 	systemctl enable tardev-snapshotter && systemctl daemon-reload && systemctl restart tardev-snapshotter
 fi
-	cp -a -S .bak -b src/runtime/kata-monitor "${debugging_binaries_path}"
-	cp -a -S .bak -b src/runtime/kata-runtime "${debugging_binaries_path}"
-	cp -a -S .bak -b src/runtime/data/kata-collect-data.sh "${debugging_binaries_path}"
-	cp -a -S .bak -b src/runtime/containerd-shim-kata-v2 "${shim_binary_path}"
 
-	cp -a -S .bak -b src/runtime/config/"${shim_config_file_name}" "${shim_config_path}"
+cp -a -S .bak -b src/runtime/kata-monitor "${debugging_binaries_path}"
+cp -a -S .bak -b src/runtime/kata-runtime "${debugging_binaries_path}"
+cp -a -S .bak -b src/runtime/data/kata-collect-data.sh "${debugging_binaries_path}"
+cp -a -S .bak -b src/runtime/containerd-shim-kata-v2 "${shim_binary_path}"/"${shim_binary_name}"
+
+cp -a -S .bak -b src/runtime/config/"${shim_config_file_name}" "${shim_config_path}"
 
 popd

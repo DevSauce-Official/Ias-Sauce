@@ -22,6 +22,9 @@ source "${common_file}"
 pushd "${repo_dir}"
 
 pushd tools/osbuilder
+
+mkdir -p "${uvm_path}"
+
 if [ "${CONF_PODS}" == "yes" ]; then
 	cp -a -S .bak -b "${img_file_name}" "${uvm_path}"
 	cp -a -S .bak -b "${igvm_file_name}" "${uvm_path}"

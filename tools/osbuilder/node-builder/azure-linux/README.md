@@ -7,7 +7,7 @@ The underlying software stack referred to in this guide will stretch from contai
 
 Reproduction can happen in various environments - the details here are omitted:
 - Install [Azure Linux](https://github.com/microsoft/azurelinux) on a bare metal machine supporting AMD SEV-SNP (unverified)
-- Deploy an Azure Linux VM via `az vm create` using a [CC vm size SKU](https://learn.microsoft.com/en-us/azure/virtual-machines/dcasccv5-dcadsccv5-series) (ex. `--os-sku AzureLinux --node-vm-size Standard_DC4as_cc_v5`)
+- Deploy an Azure Linux VM via `az vm create` using a [CC vm size SKU](https://learn.microsoft.com/en-us/azure/virtual-machines/dcasccv5-dcadsccv5-series) (ex. `--image MicrosoftCBLMariner:cbl-mariner:cbl-mariner-2-gen2:... --size Standard_DC4as_cc_v5 --security-type Standard`)
 - Deploy a [Confidential Containers for AKS cluster](https://learn.microsoft.com/en-us/azure/aks/deploy-confidential-containers-default-policy) via `az aks create`. Note, this way the bits built in this guide will already be present on the cluster's Azure Linux based nodes.
   - Deploy a debugging pod on one of the nodes, SSH onto the node.
 
@@ -23,6 +23,8 @@ Note: This step can be skipped if your environment was set up through `az aks cr
 Install relevant packages:
 ```sudo dnf -y install kata-packages-host```
 
+Note: We currently use a [forked version](https://github.com/microsoft/confidential-containers-containerd/tree/tardev-v1.7.7) of `containerd` called `containerd-cc` which is installed as part of the `kata-packages-host` package. This containerd version is based on stock containerd with patches to support the Confidential Containers on AKS use case.
+
 Edit the grub config to boot into the SEV SNP capable kernel upon next reboot:
 ```
 boot_uuid=$(sudo grep -o -m 1 '[0-9a-f]\{8\}-[0-9a-f]\{4\}-[0-9a-f]\{4\}-[0-9a-f]\{4\}-[0-9a-f]\{12\}' /boot/efi/boot/grub2/grub.cfg)
@@ -36,21 +38,14 @@ Reboot the system:
 
 ```sudo reboot now```
 
-# Deploy the containerd fork for Confidential Containers on AKS
-
-Note: This step can be skipped if your environment was set up through `az aks create`
-
-We currently use a [forked version](https://github.com/microsoft/confidential-containers-containerd/tree/tardev-v1.7.7) of `containerd`. This containerd version is  based on stock containerd with patches to support the Confidential Containers on AKS use case.
-
-This containerd version will be present when previously deploying an environment through `az aks create`. On other environments, remove the conflicting stock `containerd` and install the forked `containerd`:
-```sudo dnf remove -y moby-containerd```
-```sudo dnf install -y moby-containerd-cc```
-
 # Add Kata handler configuration snippets to containerd configuration
 
-Note: This step can be skipped if your environment was set up through `az aks create`
+Note: This step can be skipped if your environment was set up through `az aks create`.
 
-Edit `/etc/containerd/config.toml` to append the configuration with the following contents:
+An editor like `vim` may need to be installed, for example:
+`sudo dnf -y install vim`
+
+Edit `/etc/containerd/config.toml` to set following configuration:
 
 ```
 version = 2
@@ -128,7 +123,7 @@ popd
 
 Overwrite existing containerd binary, restart service:
 ```
-sudo cp -S .bak -b confidential-containers-containerd/bin/containerd /usr/bin/containerd
+sudo cp -a -S .bak -b confidential-containers-containerd/bin/containerd /usr/bin/containerd
 sudo systemctl restart containerd
 ```
 
@@ -137,22 +132,20 @@ sudo systemctl restart containerd
 If these instructions are not being followed based on having cloned its hosting repository onto the system, clone the kata-containers repository:
 ```git clone --depth 1 --branch mahuber/reproducible-builds https://github.com/microsoft/kata-containers.git```
 
-To build Azure Linux's kata-containers package components and UVM, run the following commands unmodified.
+To build Azure Linux's kata-containers package components and UVM, run:
 ```
 pushd kata-containers/tools/osbuilder/node-builder/azure-linux
-make clean
-make package
-make uvm
+make all
 popd
 ```
-To build the kata-containers-cc package components and UVM, suffix the make target names with `-confpods`.
-To run the clean, package and uvm targets in a single step, run `make all`, resp., `make all-confpods`
+To build the kata-containers-cc package components and UVM, run `make all-confpods`.
+The `all` target runs the `clean[-confpods]`, `package[-confpods]` and `uvm[-confpods]` targets in a single step (the `uvm` target depends on the `package` target).
 
 # Install the built components
 
 In this step, we move the build artifacts to proper places and eventually restart containerd so that the new Kata(-CC) configuration files are loaded.
 The following commands refer to having built the components and UVM for Azure Linux's kata-containers package in the prior step.
-If you built the kata-containers-cc package components, call the `deploy-confpods` target.
+If you built the kata-containers-cc package components, call the `deploy-confpods` make target.
 
 ```
 pushd kata-containers/tools/osbuilder/node-builder/azure-linux
@@ -164,7 +157,12 @@ popd
 
 ## Run via OCI
 
-Use e.g. `crictl` to schedule containers, referencing either the Kata or Kata-CC handlers.
+Use e.g. `crictl` (or `ctr`) to schedule Kata(-CC) containers, referencing either the Kata or Kata-CC handlers.
+The following sets of commands serve as a general reference for installing `crictl` and setting up some basic CNI to run pods:
+`sudo dnf -y install cri-tools`
+...
+
+For further usage we refer to the upstream `crictl` (or `ctr`) and CNI documentation.
 
 ## Run via Kubernetes
 
