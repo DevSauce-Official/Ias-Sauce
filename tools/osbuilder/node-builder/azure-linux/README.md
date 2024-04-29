@@ -6,10 +6,11 @@ The underlying software stack referred to in this guide will stretch from contai
 # Pre-requirements
 
 Reproduction can happen in various environments - the details here are omitted:
-- Install [Azure Linux](https://github.com/microsoft/azurelinux) on a bare metal machine supporting AMD SEV-SNP (unverified)
-- Deploy an Azure Linux VM via `az vm create` using a [CC vm size SKU](https://learn.microsoft.com/en-us/azure/virtual-machines/dcasccv5-dcadsccv5-series) (ex. `--image MicrosoftCBLMariner:cbl-mariner:cbl-mariner-2-gen2:... --size Standard_DC4as_cc_v5 --security-type Standard`)
+- Deploy an Azure Linux VM via `az vm create` using a [CC vm size SKU](https://learn.microsoft.com/en-us/azure/virtual-machines/dcasccv5-dcadsccv5-series)
+  - Example: `az vm create --resource-group <rg_name> --name <vm_name> --os-disk-size-gb <e.g. 60> --public-ip-sku Standard --size <e.g. Standard_DC4as_cc_v5> --admin-username azureuser --ssh-key-values <ssh_pubkey> --image <MicrosoftCBLMariner:cbl-mariner:...> --security-type Standard`
 - Deploy a [Confidential Containers for AKS cluster](https://learn.microsoft.com/en-us/azure/aks/deploy-confidential-containers-default-policy) via `az aks create`. Note, this way the bits built in this guide will already be present on the cluster's Azure Linux based nodes.
-  - Deploy a debugging pod on one of the nodes, SSH onto the node.
+  - Deploy a debugging pod onto one of the nodes, SSH onto the node.
+- Not validated: Install [Azure Linux](https://github.com/microsoft/azurelinux) on a bare metal machine supporting AMD SEV-SNP.
 
 The following steps assume the user has direct console access on the environnment that was set up.
 
@@ -141,6 +142,8 @@ popd
 To build the kata-containers-cc package components and UVM, run `make all-confpods`.
 The `all` target runs the `clean[-confpods]`, `package[-confpods]` and `uvm[-confpods]` targets in a single step (the `uvm` target depends on the `package` target).
 
+**Note:** By default, a UVM with Kata Agent enforcing a restrictive policy will be built, this requiring to generate valid pod security policy annotations using the `genpolicy` tool. While always recommended to do keep doing so, a UVM with a permissive security policy can be built by adapting the file `tools/osbuilder/node-builder/azure-linux/uvm_build.sh` and changing the `AGENT_POLICY_FILE` variable assignment to `allow-all.rego`
+
 # Install the built components
 
 In this step, we move the build artifacts to proper places and eventually restart containerd so that the new Kata(-CC) configuration files are loaded.
@@ -158,9 +161,47 @@ popd
 ## Run via OCI
 
 Use e.g. `crictl` (or `ctr`) to schedule Kata(-CC) containers, referencing either the Kata or Kata-CC handlers.
+
 The following sets of commands serve as a general reference for installing `crictl` and setting up some basic CNI to run pods:
-`sudo dnf -y install cri-tools`
-...
+- Install `crictl`:
+
+  `sudo dnf -y install cri-tools`
+
+- Set up CNI, example:
+
+  *TODO*
+
+- Create a pod manifest (and apply policy), simple example:
+
+  ```
+  apiVersion: v1
+  kind: Pod
+  metadata:
+    namespace: busybox-ns
+    name: busybox
+    uid: busybox-id
+  spec:
+    containers:
+    - image: docker.io/library/busybox:latest
+      name: busybox
+  ```
+
+- Run a Kata or Kata-CC pod with `crictl`:
+
+  `sudo crictl runp -T 30s -r <kata/kata-cc> <path/to/pod.yaml>`
+
+- Decommission pods:
+
+  `sudo crictl pods`
+
+  `sudo crictl stopp <pod_id>`
+
+  `sudo crictl rmp <pod_id>`
+
+Examples with `crictl`:
+- `sudo ctr image pull --snapshotter=tardev docker.io/library/busybox:latest`
+- `sudo ctr run --cni --runtime io.containerd.run.kata.v2 --runtime-config-path /usr/share/defaults/kata-containers/configuration.toml -t --rm docker.io/library/busybox:latest hello sh`
+- `sudo ctr run --cni --runtime io.containerd.run.kata-cc.v2 --runtime-config-path /opt/confidential-containers/share/defaults/kata-containers/configuration-clh-snp.toml --snapshotter tardev -t --rm docker.io/library/busybox:latest hello sh`
 
 For further usage we refer to the upstream `crictl` (or `ctr`) and CNI documentation.
 
