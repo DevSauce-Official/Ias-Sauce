@@ -81,7 +81,9 @@ cfg_if! {
 // sysfs as directories in the subtree under /sys/devices/LNXSYSTM:00
 pub const ACPI_DEV_PATH: &str = "/devices/LNXSYSTM";
 
+#[cfg(feature = "kata-hotplug")]
 pub const SYSFS_CPU_PATH: &str = "/sys/devices/system/cpu";
+#[cfg(feature = "kata-hotplug")]
 pub const SYSFS_CPU_ONLINE_PATH: &str = "/sys/devices/system/cpu/online";
 
 pub const SYSFS_MEMORY_BLOCK_SIZE_PATH: &str = "/sys/devices/system/memory/block_size_bytes";
@@ -93,6 +95,7 @@ pub const SYSFS_SCSI_HOST_PATH: &str = "/sys/class/scsi_host";
 pub const SYSFS_BUS_PCI_PATH: &str = "/sys/bus/pci";
 
 pub const SYSFS_CGROUPPATH: &str = "/sys/fs/cgroup";
+#[cfg(feature = "kata-hotplug")]
 pub const SYSFS_ONLINE_FILE: &str = "online";
 
 pub const PROC_MOUNTSTATS: &str = "/proc/self/mountstats";

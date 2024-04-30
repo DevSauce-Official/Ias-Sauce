@@ -10,23 +10,20 @@ use std::fs;
 use std::os::fd::FromRawFd;
 use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
-use std::str::FromStr;
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::{Arc, RwLock};
+use std::thread;
 use std::time::{Duration, Instant};
-use std::{thread, time};
 
 use anyhow::{anyhow, Context, Result};
-use kata_types::cpu::CpuSet;
 use kata_types::mount::StorageDevice;
 use libc::{pid_t, syscall};
 use nix::fcntl::{self, OFlag};
 use nix::sched::{setns, unshare, CloneFlags};
 use nix::sys::stat::Mode;
 use oci::{Hook, Hooks};
-use protocols::agent::{OnlineCPUMemRequest, SharedMount};
-use regex::Regex;
-use rustjail::cgroups::{self as rustjail_cgroups, DevicesCgroupInfo};
+use protocols::agent::SharedMount;
+use rustjail::cgroups::DevicesCgroupInfo;
 use rustjail::container::BaseContainer;
 use rustjail::container::LinuxContainer;
 use rustjail::process::Process;
@@ -36,7 +33,6 @@ use tokio::sync::oneshot;
 use tokio::sync::Mutex;
 use tracing::instrument;
 
-use crate::linux_abi::*;
 use crate::mount::{get_mount_fs_type, TYPE_ROOTFS};
 use crate::namespace::Namespace;
 use crate::netlink::Handle;
@@ -45,6 +41,21 @@ use crate::pci;
 use crate::storage::StorageDeviceGeneric;
 use crate::uevent::{Uevent, UeventMatcher};
 use crate::watcher::BindWatcher;
+
+#[cfg(feature = "kata-hotplug")]
+use kata_types::cpu::CpuSet;
+#[cfg(feature = "kata-hotplug")]
+use protocols::agent::OnlineCPUMemRequest;
+#[cfg(feature = "kata-hotplug")]
+use regex::Regex;
+#[cfg(feature = "kata-hotplug")]
+use rustjail::cgroups::{self as rustjail_cgroups};
+#[cfg(feature = "kata-hotplug")]
+use std::str::FromStr;
+#[cfg(feature = "kata-hotplug")]
+use std::time;
+#[cfg(feature = "kata-hotplug")]
+use crate::linux_abi::*;
 
 pub const ERR_INVALID_CONTAINER_ID: &str = "Invalid container id";
 
@@ -301,6 +312,7 @@ impl Sandbox {
     }
 
     #[instrument]
+    #[cfg(feature = "kata-hotplug")]
     pub fn online_cpu_memory(&self, req: &OnlineCPUMemRequest) -> Result<()> {
         if req.nb_cpus > 0 {
             // online cpus
@@ -568,6 +580,7 @@ impl Sandbox {
 }
 
 #[instrument]
+#[cfg(feature = "kata-hotplug")]
 fn online_resources(logger: &Logger, path: &str, pattern: &str, num: i32) -> Result<i32> {
     let mut count = 0;
     let re = Regex::new(pattern)?;
@@ -600,6 +613,7 @@ fn online_resources(logger: &Logger, path: &str, pattern: &str, num: i32) -> Res
 }
 
 #[instrument]
+#[cfg(feature = "kata-hotplug")]
 fn online_memory(logger: &Logger) -> Result<()> {
     online_resources(logger, SYSFS_MEMORY_ONLINE_PATH, r"memory[0-9]+", -1)
         .context("online memory resource")?;
@@ -607,10 +621,13 @@ fn online_memory(logger: &Logger) -> Result<()> {
 }
 
 // max wait for all CPUs to online will use 50 * 100 = 5 seconds.
+#[cfg(feature = "kata-hotplug")]
 const ONLINE_CPUMEM_WAIT_MILLIS: u64 = 50;
+#[cfg(feature = "kata-hotplug")]
 const ONLINE_CPUMEM_MAX_RETRIES: i32 = 100;
 
 #[instrument]
+#[cfg(feature = "kata-hotplug")]
 fn online_cpus(logger: &Logger, num: i32) -> Result<i32> {
     let mut onlined_cpu_count = onlined_cpus().context("onlined cpu count")?;
     // for some vmms, like dragonball, they will online cpus for us
@@ -647,6 +664,7 @@ fn online_cpus(logger: &Logger, num: i32) -> Result<i32> {
     ))
 }
 
+#[cfg(feature = "kata-hotplug")]
 fn onlined_cpus() -> Result<i32> {
     let content =
         fs::read_to_string(SYSFS_CPU_ONLINE_PATH).context("read sysfs cpu online file")?;
@@ -1105,6 +1123,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[cfg(feature = "kata-hotplug")]
     async fn test_online_resources() {
         #[derive(Debug, Default)]
         struct TestFile {

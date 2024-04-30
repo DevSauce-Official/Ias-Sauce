@@ -1264,6 +1264,7 @@ impl agent_ttrpc::AgentService for AgentService {
         Ok(Empty::new())
     }
 
+    #[cfg(feature = "kata-net")]
     async fn add_arp_neighbors(
         &self,
         ctx: &TtrpcContext,
@@ -1292,6 +1293,7 @@ impl agent_ttrpc::AgentService for AgentService {
         Ok(Empty::new())
     }
 
+    #[cfg(feature = "kata-hotplug")]
     async fn online_cpu_mem(
         &self,
         ctx: &TtrpcContext,

@@ -4,10 +4,10 @@
 //
 
 use anyhow::{anyhow, Context, Result};
-use futures::{future, StreamExt, TryStreamExt};
+use futures::{future, TryStreamExt};
 use ipnetwork::{IpNetwork, Ipv4Network, Ipv6Network};
 use nix::errno::Errno;
-use protocols::types::{ARPNeighbor, IPAddress, IPFamily, Interface, Route};
+use protocols::types::{IPAddress, IPFamily, Interface, Route};
 use rtnetlink::{new_connection, packet, IpVersion};
 use std::convert::TryFrom;
 use std::fmt;
@@ -17,6 +17,12 @@ use std::str::{self, FromStr};
 
 #[cfg(feature = "kata-net")]
 use std::convert::TryInto;
+
+#[cfg(feature = "kata-net")]
+use futures::StreamExt;
+
+#[cfg(feature = "kata-net")]
+use protocols::types::ARPNeighbor;
 
 /// Search criteria to use when looking for a link in `find_link`.
 pub enum LinkFilter<'a> {
@@ -533,6 +539,7 @@ impl Handle {
         Ok(())
     }
 
+    #[cfg(feature = "kata-net")]
     pub async fn add_arp_neighbors<I>(&mut self, list: I) -> Result<()>
     where
         I: IntoIterator<Item = ARPNeighbor>,
@@ -552,6 +559,7 @@ impl Handle {
 
     /// Adds an ARP neighbor.
     /// TODO: `rtnetlink` has no neighbours API, remove this after https://github.com/little-dude/netlink/pull/135
+    #[cfg(feature = "kata-net")]
     async fn add_arp_neighbor(&mut self, neigh: &ARPNeighbor) -> Result<()> {
         let ip_address = neigh
             .toIPAddress
@@ -816,6 +824,7 @@ mod tests {
     use super::*;
     use rtnetlink::packet;
     use std::iter;
+    #[cfg(feature = "kata-net")]
     use std::process::Command;
     use test_utils::skip_if_not_root;
 
@@ -983,6 +992,7 @@ mod tests {
         assert_eq!(bytes, [0xAB, 0x0C, 0xDE, 0x12, 0x34, 0x56]);
     }
 
+    #[cfg(feature = "kata-net")]
     fn clean_env_for_test_add_one_arp_neighbor(dummy_name: &str, ip: &str) {
         // ip link delete dummy
         Command::new("ip")
@@ -997,6 +1007,7 @@ mod tests {
             .expect("prepare: failed to delete neigh");
     }
 
+    #[cfg(feature = "kata-net")]
     fn prepare_env_for_test_add_one_arp_neighbor(dummy_name: &str, ip: &str) {
         clean_env_for_test_add_one_arp_neighbor(dummy_name, ip);
         // modprobe dummy
@@ -1025,6 +1036,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[cfg(feature = "kata-net")]
     async fn test_add_one_arp_neighbor() {
         skip_if_not_root!();
 
