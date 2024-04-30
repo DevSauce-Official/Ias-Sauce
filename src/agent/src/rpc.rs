@@ -1154,6 +1154,7 @@ impl agent_ttrpc::AgentService for AgentService {
         })
     }
 
+    #[cfg(feature = "kata-net")]
     async fn list_routes(
         &self,
         ctx: &TtrpcContext,
