@@ -109,7 +109,6 @@ Restart containerd:
 
 ```sudo dnf install -y git vim golang rust build-essential protobuf-compiler protobuf-devel expect openssl-devel clang-devel libseccomp-devel parted qemu-img btrfs-progs-devel device-mapper-devel cmake fuse-devel jq curl kata-packages-uvm-build```
 
-### TODO: add kernel-uvm-devel to kata-packages-uvm-build, or kata-containers-cc-tools
 If you intend to build the confpods UVM, install the following package:
 ```sudo dnf install -y kernel-uvm-devel``
 
@@ -156,20 +155,46 @@ sudo make deploy
 popd
 ```
 
-# Run Kata Confidential Containers
+# Run Kata (Confidential) Containers
 
-## Run via OCI
+## Run via CRI or via containerd API
 
 Use e.g. `crictl` (or `ctr`) to schedule Kata(-CC) containers, referencing either the Kata or Kata-CC handlers.
 
 The following sets of commands serve as a general reference for installing `crictl` and setting up some basic CNI to run pods:
-- Install `crictl`:
+- Install `crictl`, set runtime endpoint in `crictl` configuration:
 
   `sudo dnf -y install cri-tools`
 
-- Set up CNI, example:
+  `sudo crictl config --set runtime-endpoint=unix:///run/containerd/containerd.sock`
 
-  *TODO*
+- Install CNI binaries and set a sample CNI config:
+
+  `sudo dnf -y install cni`
+
+  `sudo mv /etc/cni/net.d/99-loopback.conf.sample /etc/cni/net.d/99-loopback.conf`
+
+  ```
+  sudo tee /etc/cni/net.d/10-mynet.conf <<EOF
+  {
+          "cniVersion": "0.2.0",
+          "name": "mynet",
+          "type": "bridge",
+          "bridge": "cni0",
+          "isGateway": true,
+          "ipMasq": true,
+          "ipam": {
+                  "type": "host-local",
+                  "subnet": "10.22.0.0/16",
+                  "routes": [
+                          { "dst": "0.0.0.0/0" }
+                  ]
+          }
+  }
+  EOF
+  ```
+
+  The `10-mynet` configuration file example is derived from: `https://github.com/containernetworking/cni`
 
 - Create a pod manifest (and apply policy), simple example:
 
@@ -188,7 +213,7 @@ The following sets of commands serve as a general reference for installing `cric
 
 - Run a Kata or Kata-CC pod with `crictl`:
 
-  `sudo crictl runp -T 30s -r <kata/kata-cc> <path/to/pod.yaml>`
+  `sudo crictl runp -T 30s -r <runc/kata/kata-cc> <path/to/pod.yaml>`
 
 - Decommission pods:
 
@@ -198,10 +223,14 @@ The following sets of commands serve as a general reference for installing `cric
 
   `sudo crictl rmp <pod_id>`
 
-Examples with `crictl`:
+Examples with `crictl` for Kata and Kata-CC pods:
 - `sudo ctr image pull --snapshotter=tardev docker.io/library/busybox:latest`
 - `sudo ctr run --cni --runtime io.containerd.run.kata.v2 --runtime-config-path /usr/share/defaults/kata-containers/configuration.toml -t --rm docker.io/library/busybox:latest hello sh`
 - `sudo ctr run --cni --runtime io.containerd.run.kata-cc.v2 --runtime-config-path /opt/confidential-containers/share/defaults/kata-containers/configuration-clh-snp.toml --snapshotter tardev -t --rm docker.io/library/busybox:latest hello sh`
+
+Example with `crictl` for runc pods:
+- `sudo ctr image pull --snapshotter=tardev docker.io/library/busybox:latest`
+- `sudo ctr run --cni --runtime io.containerd.run.runc.v2 -t --rm docker.io/library/busybox:latest hello sh`
 
 For further usage we refer to the upstream `crictl` (or `ctr`) and CNI documentation.
 
