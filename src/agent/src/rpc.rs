@@ -25,15 +25,18 @@ use cgroups::freezer::FreezerState;
 use oci::{LinuxNamespace, Root, Spec};
 use protobuf::MessageField;
 use protocols::agent::{
-    AddSwapRequest, AgentDetails, CopyFileRequest, GuestDetailsResponse, Interfaces, Metrics,
-    OOMEvent, ReadStreamResponse, Routes, StatsContainerResponse, VolumeStatsRequest,
-    WaitProcessResponse, WriteStreamResponse,
+    AddSwapRequest, AgentDetails, CopyFileRequest, GuestDetailsResponse, Metrics, OOMEvent,
+    ReadStreamResponse, Routes, StatsContainerResponse, VolumeStatsRequest, WaitProcessResponse,
+    WriteStreamResponse,
 };
 
 #[cfg(feature = "kata-net")]
 use protocols::agent::{
     GetIPTablesRequest, GetIPTablesResponse, SetIPTablesRequest, SetIPTablesResponse,
 };
+
+#[cfg(feature = "kata-net")]
+use protocols::agent::Interfaces;
 
 use protocols::csi::{
     volume_usage::Unit as VolumeUsage_Unit, VolumeCondition, VolumeStatsResponse, VolumeUsage,
@@ -1127,6 +1130,7 @@ impl agent_ttrpc::AgentService for AgentService {
         })
     }
 
+    #[cfg(feature = "kata-net")]
     async fn list_interfaces(
         &self,
         ctx: &TtrpcContext,

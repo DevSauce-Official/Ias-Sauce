@@ -9,11 +9,14 @@ use ipnetwork::{IpNetwork, Ipv4Network, Ipv6Network};
 use nix::errno::Errno;
 use protocols::types::{ARPNeighbor, IPAddress, IPFamily, Interface, Route};
 use rtnetlink::{new_connection, packet, IpVersion};
-use std::convert::{TryFrom, TryInto};
+use std::convert::TryFrom;
 use std::fmt;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 use std::ops::Deref;
 use std::str::{self, FromStr};
+
+#[cfg(feature = "kata-net")]
+use std::convert::TryInto;
 
 /// Search criteria to use when looking for a link in `find_link`.
 pub enum LinkFilter<'a> {
@@ -160,6 +163,7 @@ impl Handle {
     }
 
     /// Retireve available network interfaces.
+    #[cfg(feature = "kata-net")]
     pub async fn list_interfaces(&self) -> Result<Vec<Interface>> {
         let mut list = Vec::new();
 
@@ -226,6 +230,7 @@ impl Handle {
             .ok_or_else(|| anyhow!("Link not found ({})", filter))
     }
 
+    #[cfg(feature = "kata-net")]
     async fn list_links(&self) -> Result<Vec<Link>> {
         let result = self
             .handle
@@ -686,6 +691,7 @@ impl Link {
     }
 
     /// Extract Mac address.
+    #[cfg(feature = "kata-net")]
     fn address(&self) -> String {
         use packet::nlas::link::Nla;
         self.nlas
@@ -709,6 +715,7 @@ impl Link {
         self.header.index
     }
 
+    #[cfg(feature = "kata-net")]
     fn mtu(&self) -> Option<u64> {
         use packet::nlas::link::Nla;
         self.nlas.iter().find_map(|n| {
@@ -825,6 +832,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[cfg(feature = "kata-net")]
     async fn find_link_by_addr() {
         let handle = Handle::new().unwrap();
 
@@ -859,6 +867,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[cfg(feature = "kata-net")]
     async fn link_ext() {
         let lo = Handle::new()
             .unwrap()
@@ -900,6 +909,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[cfg(feature = "kata-net")]
     async fn list_interfaces() {
         let list = Handle::new()
             .unwrap()
