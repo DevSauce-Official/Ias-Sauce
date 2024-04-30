@@ -26,12 +26,14 @@ use oci::{LinuxNamespace, Root, Spec};
 use protobuf::MessageField;
 use protocols::agent::{
     AddSwapRequest, AgentDetails, CopyFileRequest, GuestDetailsResponse, Interfaces, Metrics,
-    OOMEvent, ReadStreamResponse, Routes, SetIPTablesRequest, SetIPTablesResponse,
-    StatsContainerResponse, VolumeStatsRequest, WaitProcessResponse, WriteStreamResponse,
+    OOMEvent, ReadStreamResponse, Routes, StatsContainerResponse, VolumeStatsRequest,
+    WaitProcessResponse, WriteStreamResponse,
 };
 
 #[cfg(feature = "kata-net")]
-use protocols::agent::{GetIPTablesRequest, GetIPTablesResponse};
+use protocols::agent::{
+    GetIPTablesRequest, GetIPTablesResponse, SetIPTablesRequest, SetIPTablesResponse,
+};
 
 use protocols::csi::{
     volume_usage::Unit as VolumeUsage_Unit, VolumeCondition, VolumeStatsResponse, VolumeUsage,
@@ -93,7 +95,11 @@ use std::time::Duration;
 
 use nix::unistd::{Gid, Uid};
 use std::fs::{File, OpenOptions};
-use std::io::{BufRead, BufReader, Write};
+use std::io::{BufRead, BufReader};
+
+#[cfg(feature = "kata-net")]
+use std::io::Write;
+
 use std::os::unix::fs::FileExt;
 use std::path::PathBuf;
 
@@ -108,13 +114,17 @@ const MODPROBE_PATH: &str = "/sbin/modprobe";
 const USR_IPTABLES_SAVE: &str = "/usr/sbin/iptables-save";
 #[cfg(feature = "kata-net")]
 const IPTABLES_SAVE: &str = "/sbin/iptables-save";
+#[cfg(feature = "kata-net")]
 const USR_IPTABLES_RESTORE: &str = "/usr/sbin/iptables-store";
+#[cfg(feature = "kata-net")]
 const IPTABLES_RESTORE: &str = "/sbin/iptables-restore";
 #[cfg(feature = "kata-net")]
 const USR_IP6TABLES_SAVE: &str = "/usr/sbin/ip6tables-save";
 #[cfg(feature = "kata-net")]
 const IP6TABLES_SAVE: &str = "/sbin/ip6tables-save";
+#[cfg(feature = "kata-net")]
 const USR_IP6TABLES_RESTORE: &str = "/usr/sbin/ip6tables-save";
+#[cfg(feature = "kata-net")]
 const IP6TABLES_RESTORE: &str = "/sbin/ip6tables-restore";
 const KATA_GUEST_SHARE_DIR: &str = "/run/kata-containers/shared/containers/";
 
@@ -127,6 +137,7 @@ const ERR_NO_SANDBOX_PIDNS: &str = "Sandbox does not have sandbox_pidns";
 // don't expect other writers to iptables, we don't expect contention for grabbing the iptables
 // filesystem lock. Based on this, 5 seconds seems a resonable timeout period in case the lock is
 // not available.
+#[cfg(feature = "kata-net")]
 const IPTABLES_RESTORE_WAIT_SEC: u64 = 5;
 
 // Convenience function to obtain the scope logger.
@@ -1019,6 +1030,7 @@ impl agent_ttrpc::AgentService for AgentService {
         })
     }
 
+    #[cfg(feature = "kata-net")]
     async fn set_ip_tables(
         &self,
         ctx: &TtrpcContext,
