@@ -25,11 +25,14 @@ use cgroups::freezer::FreezerState;
 use oci::{LinuxNamespace, Root, Spec};
 use protobuf::MessageField;
 use protocols::agent::{
-    AddSwapRequest, AgentDetails, CopyFileRequest, GetIPTablesRequest, GetIPTablesResponse,
-    GuestDetailsResponse, Interfaces, Metrics, OOMEvent, ReadStreamResponse, Routes,
-    SetIPTablesRequest, SetIPTablesResponse, StatsContainerResponse, VolumeStatsRequest,
-    WaitProcessResponse, WriteStreamResponse,
+    AddSwapRequest, AgentDetails, CopyFileRequest, GuestDetailsResponse, Interfaces, Metrics,
+    OOMEvent, ReadStreamResponse, Routes, SetIPTablesRequest, SetIPTablesResponse,
+    StatsContainerResponse, VolumeStatsRequest, WaitProcessResponse, WriteStreamResponse,
 };
+
+#[cfg(feature = "kata-net")]
+use protocols::agent::{GetIPTablesRequest, GetIPTablesResponse};
+
 use protocols::csi::{
     volume_usage::Unit as VolumeUsage_Unit, VolumeCondition, VolumeStatsResponse, VolumeUsage,
 };
@@ -101,11 +104,15 @@ const MODPROBE_PATH: &str = "/sbin/modprobe";
 
 /// the iptables seriers binaries could appear either in /sbin
 /// or /usr/sbin, we need to check both of them
+#[cfg(feature = "kata-net")]
 const USR_IPTABLES_SAVE: &str = "/usr/sbin/iptables-save";
+#[cfg(feature = "kata-net")]
 const IPTABLES_SAVE: &str = "/sbin/iptables-save";
 const USR_IPTABLES_RESTORE: &str = "/usr/sbin/iptables-store";
 const IPTABLES_RESTORE: &str = "/sbin/iptables-restore";
+#[cfg(feature = "kata-net")]
 const USR_IP6TABLES_SAVE: &str = "/usr/sbin/ip6tables-save";
+#[cfg(feature = "kata-net")]
 const IP6TABLES_SAVE: &str = "/sbin/ip6tables-save";
 const USR_IP6TABLES_RESTORE: &str = "/usr/sbin/ip6tables-save";
 const IP6TABLES_RESTORE: &str = "/sbin/ip6tables-restore";
@@ -724,6 +731,7 @@ impl agent_ttrpc::AgentService for AgentService {
         self.do_wait_process(req).await.map_ttrpc_err(same)
     }
 
+    #[cfg(feature = "kata-hotplug")]
     async fn update_container(
         &self,
         ctx: &TtrpcContext,
@@ -974,6 +982,7 @@ impl agent_ttrpc::AgentService for AgentService {
         Ok(Empty::new())
     }
 
+    #[cfg(feature = "kata-net")]
     async fn get_ip_tables(
         &self,
         ctx: &TtrpcContext,
@@ -2010,6 +2019,7 @@ mod tests {
     use super::*;
     use crate::{namespace::Namespace, protocols::agent_ttrpc_async::AgentService as _};
     use nix::mount;
+    #[cfg(feature = "kata-net")]
     use nix::sched::{unshare, CloneFlags};
     use oci::{Hook, Hooks, Linux, LinuxDeviceCgroup, LinuxNamespace, LinuxResources};
     use tempfile::{tempdir, TempDir};
@@ -2782,6 +2792,7 @@ OtherField:other
     }
 
     #[tokio::test]
+    #[cfg(feature = "kata-net")]
     async fn test_ip_tables() {
         skip_if_not_root!();
 
