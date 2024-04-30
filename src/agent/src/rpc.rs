@@ -69,7 +69,6 @@ use crate::namespace::{NSTYPEIPC, NSTYPEPID, NSTYPEUTS};
 use crate::network::setup_guest_dns;
 use crate::passfd_io;
 use crate::pci;
-use crate::random;
 use crate::sandbox::Sandbox;
 use crate::storage::{add_storages, update_ephemeral_mounts, STORAGE_HANDLERS};
 use crate::version::{AGENT_VERSION, API_VERSION};
@@ -107,6 +106,9 @@ use std::os::unix::fs::FileExt;
 use std::path::PathBuf;
 
 use kata_types::k8s;
+
+#[cfg(feature = "kata-legacy")]
+use crate::random;
 
 pub const CONTAINER_BASE: &str = "/run/kata-containers";
 const MODPROBE_PATH: &str = "/sbin/modprobe";
@@ -1308,6 +1310,7 @@ impl agent_ttrpc::AgentService for AgentService {
         Ok(Empty::new())
     }
 
+    #[cfg(feature = "kata-legacy")]
     async fn reseed_random_dev(
         &self,
         ctx: &TtrpcContext,
@@ -1350,6 +1353,7 @@ impl agent_ttrpc::AgentService for AgentService {
         Ok(resp)
     }
 
+    #[cfg(feature = "kata-hotplug")]
     async fn mem_hotplug_by_probe(
         &self,
         ctx: &TtrpcContext,
@@ -1363,6 +1367,7 @@ impl agent_ttrpc::AgentService for AgentService {
         Ok(Empty::new())
     }
 
+    #[cfg(feature = "kata-legacy")]
     async fn set_guest_date_time(
         &self,
         ctx: &TtrpcContext,
@@ -1798,6 +1803,7 @@ fn is_signal_handled(proc_status_file: &str, signum: u32) -> bool {
         })
 }
 
+#[cfg(feature = "kata-legacy")]
 fn do_mem_hotplug_by_probe(addrs: &[u64]) -> Result<()> {
     for addr in addrs.iter() {
         fs::write(SYSFS_MEMORY_HOTPLUG_PROBE_PATH, format!("{:#X}", *addr))?;
@@ -1805,6 +1811,7 @@ fn do_mem_hotplug_by_probe(addrs: &[u64]) -> Result<()> {
     Ok(())
 }
 
+#[cfg(feature = "kata-legacy")]
 fn do_set_guest_date_time(sec: i64, usec: i64) -> Result<()> {
     let tv = libc::timeval {
         tv_sec: sec,
