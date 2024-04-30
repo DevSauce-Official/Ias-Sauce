@@ -25,7 +25,7 @@ use cgroups::freezer::FreezerState;
 use oci::{LinuxNamespace, Root, Spec};
 use protobuf::MessageField;
 use protocols::agent::{
-    AddSwapRequest, AgentDetails, CopyFileRequest, GuestDetailsResponse, Metrics, OOMEvent,
+    AddSwapRequest, AgentDetails, CopyFileRequest, GuestDetailsResponse, OOMEvent,
     ReadStreamResponse, Routes, StatsContainerResponse, VolumeStatsRequest, WaitProcessResponse,
     WriteStreamResponse,
 };
@@ -34,9 +34,12 @@ use protocols::agent::{
 use protocols::agent::{
     GetIPTablesRequest, GetIPTablesResponse, SetIPTablesRequest, SetIPTablesResponse,
 };
-
 #[cfg(feature = "kata-net")]
 use protocols::agent::Interfaces;
+
+#[cfg(feature = "kata-metrics")]
+use protocols::agent::Metrics;
+
 
 use protocols::csi::{
     volume_usage::Unit as VolumeUsage_Unit, VolumeCondition, VolumeStatsResponse, VolumeUsage,
@@ -63,7 +66,6 @@ use rustjail::process::ProcessOperations;
 use crate::device::{add_devices, get_virtio_blk_pci_device_name, update_env_pci};
 use crate::features::get_build_features;
 use crate::linux_abi::*;
-use crate::metrics::get_metrics;
 use crate::mount::baremount;
 use crate::namespace::{NSTYPEIPC, NSTYPEPID, NSTYPEUTS};
 use crate::network::setup_guest_dns;
@@ -82,6 +84,9 @@ use crate::policy::{do_set_policy, is_allowed};
 
 #[cfg(feature = "guest-pull")]
 use crate::image;
+
+#[cfg(feature = "kata-legacy")]
+use crate::metrics::get_metrics;
 
 use opentelemetry::global;
 use tracing::span;
@@ -1394,6 +1399,7 @@ impl agent_ttrpc::AgentService for AgentService {
         Ok(Empty::new())
     }
 
+    #[cfg(feature = "kata-metrics")]
     async fn get_metrics(
         &self,
         ctx: &TtrpcContext,

@@ -43,6 +43,7 @@ mod console;
 mod device;
 mod features;
 mod linux_abi;
+#[cfg(feature = "kata-legacy")]
 mod metrics;
 mod mount;
 mod namespace;
