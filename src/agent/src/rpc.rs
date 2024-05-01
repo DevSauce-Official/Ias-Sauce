@@ -10,7 +10,6 @@ use tokio::sync::Mutex;
 
 use std::ffi::{CString, OsStr};
 use std::fmt::Debug;
-use std::io;
 use std::os::unix::ffi::OsStrExt;
 use std::path::Path;
 use std::sync::Arc;
@@ -25,25 +24,13 @@ use cgroups::freezer::FreezerState;
 use oci::{LinuxNamespace, Root, Spec};
 use protobuf::MessageField;
 use protocols::agent::{
-    AddSwapRequest, AgentDetails, CopyFileRequest, GuestDetailsResponse, OOMEvent,
-    ReadStreamResponse, Routes, StatsContainerResponse, VolumeStatsRequest, WaitProcessResponse,
-    WriteStreamResponse,
+    AgentDetails, CopyFileRequest, GuestDetailsResponse, OOMEvent, ReadStreamResponse, Routes,
+    StatsContainerResponse, WaitProcessResponse, WriteStreamResponse,
 };
-
-#[cfg(feature = "kata-net")]
-use protocols::agent::{
-    GetIPTablesRequest, GetIPTablesResponse, SetIPTablesRequest, SetIPTablesResponse,
-};
-#[cfg(feature = "kata-net")]
-use protocols::agent::Interfaces;
 
 #[cfg(feature = "kata-metrics")]
 use protocols::agent::Metrics;
 
-
-use protocols::csi::{
-    volume_usage::Unit as VolumeUsage_Unit, VolumeCondition, VolumeStatsResponse, VolumeUsage,
-};
 use protocols::empty::Empty;
 use protocols::health::{
     health_check_response::ServingStatus as HealthCheckResponse_ServingStatus, HealthCheckResponse,
@@ -59,18 +46,17 @@ use rustjail::specconv::CreateOpts;
 
 use nix::errno::Errno;
 use nix::mount::MsFlags;
-use nix::sys::{stat, statfs};
+use nix::sys::stat;
 use nix::unistd::{self, Pid};
 use rustjail::process::ProcessOperations;
 
-use crate::device::{add_devices, get_virtio_blk_pci_device_name, update_env_pci};
+use crate::device::{add_devices, update_env_pci};
 use crate::features::get_build_features;
 use crate::linux_abi::*;
 use crate::mount::baremount;
 use crate::namespace::{NSTYPEIPC, NSTYPEPID, NSTYPEUTS};
 use crate::network::setup_guest_dns;
 use crate::passfd_io;
-use crate::pci;
 use crate::sandbox::Sandbox;
 use crate::storage::{add_storages, update_ephemeral_mounts, STORAGE_HANDLERS};
 use crate::version::{AGENT_VERSION, API_VERSION};
@@ -86,7 +72,27 @@ use crate::policy::{do_set_policy, is_allowed};
 use crate::image;
 
 #[cfg(feature = "kata-legacy")]
+use crate::device::get_virtio_blk_pci_device_name;
+#[cfg(feature = "kata-legacy")]
 use crate::metrics::get_metrics;
+#[cfg(feature = "kata-legacy")]
+use crate::pci;
+#[cfg(feature = "kata-legacy")]
+use crate::random;
+#[cfg(feature = "kata-legacy")]
+use nix::sys::statfs;
+#[cfg(feature = "kata-legacy")]
+use protocols::agent::AddSwapRequest;
+#[cfg(feature = "kata-legacy")]
+use protocols::agent::VolumeStatsRequest;
+#[cfg(feature = "kata-legacy")]
+use protocols::csi::{volume_usage::Unit as VolumeUsage_Unit, VolumeUsage};
+#[cfg(feature = "kata-legacy")]
+use protocols::csi::{VolumeCondition, VolumeStatsResponse};
+#[cfg(feature = "kata-legacy")]
+use std::io;
+#[cfg(feature = "kata-legacy")]
+use libc::c_char;
 
 use opentelemetry::global;
 use tracing::span;
@@ -94,7 +100,7 @@ use tracing_opentelemetry::OpenTelemetrySpanExt;
 
 use tracing::instrument;
 
-use libc::{self, c_char, c_ushort, pid_t, winsize, TIOCSWINSZ};
+use libc::{self, c_ushort, pid_t, winsize, TIOCSWINSZ};
 use std::fs;
 use std::os::unix::prelude::PermissionsExt;
 use std::process::{Command, Stdio};
@@ -104,20 +110,22 @@ use nix::unistd::{Gid, Uid};
 use std::fs::{File, OpenOptions};
 use std::io::{BufRead, BufReader};
 
-#[cfg(feature = "kata-net")]
-use std::io::Write;
-
 use std::os::unix::fs::FileExt;
 use std::path::PathBuf;
 
 use kata_types::k8s;
 
-#[cfg(feature = "kata-legacy")]
-use crate::random;
-
 pub const CONTAINER_BASE: &str = "/run/kata-containers";
 const MODPROBE_PATH: &str = "/sbin/modprobe";
 
+#[cfg(feature = "kata-net")]
+use protocols::agent::Interfaces;
+#[cfg(feature = "kata-net")]
+use protocols::agent::{
+    GetIPTablesRequest, GetIPTablesResponse, SetIPTablesRequest, SetIPTablesResponse,
+};
+#[cfg(feature = "kata-net")]
+use std::io::Write;
 /// the iptables seriers binaries could appear either in /sbin
 /// or /usr/sbin, we need to check both of them
 #[cfg(feature = "kata-net")]
@@ -137,18 +145,17 @@ const USR_IP6TABLES_RESTORE: &str = "/usr/sbin/ip6tables-save";
 #[cfg(feature = "kata-net")]
 const IP6TABLES_RESTORE: &str = "/sbin/ip6tables-restore";
 const KATA_GUEST_SHARE_DIR: &str = "/run/kata-containers/shared/containers/";
-
-const ERR_CANNOT_GET_WRITER: &str = "Cannot get writer";
-const ERR_INVALID_BLOCK_SIZE: &str = "Invalid block size";
-const ERR_NO_LINUX_FIELD: &str = "Spec does not contain linux field";
-const ERR_NO_SANDBOX_PIDNS: &str = "Sandbox does not have sandbox_pidns";
-
 // IPTABLES_RESTORE_WAIT_SEC is the timeout value provided to iptables-restore --wait. Since we
 // don't expect other writers to iptables, we don't expect contention for grabbing the iptables
 // filesystem lock. Based on this, 5 seconds seems a resonable timeout period in case the lock is
 // not available.
 #[cfg(feature = "kata-net")]
 const IPTABLES_RESTORE_WAIT_SEC: u64 = 5;
+
+const ERR_CANNOT_GET_WRITER: &str = "Cannot get writer";
+const ERR_INVALID_BLOCK_SIZE: &str = "Invalid block size";
+const ERR_NO_LINUX_FIELD: &str = "Spec does not contain linux field";
+const ERR_NO_SANDBOX_PIDNS: &str = "Sandbox does not have sandbox_pidns";
 
 // Convenience function to obtain the scope logger.
 fn sl() -> slog::Logger {
@@ -1437,6 +1444,7 @@ impl agent_ttrpc::AgentService for AgentService {
         Ok(resp)
     }
 
+    #[cfg(feature = "kata-legacy")]
     async fn get_volume_stats(
         &self,
         ctx: &TtrpcContext,
@@ -1472,6 +1480,7 @@ impl agent_ttrpc::AgentService for AgentService {
         Ok(resp)
     }
 
+    #[cfg(feature = "kata-legacy")]
     async fn add_swap(
         &self,
         ctx: &TtrpcContext,
@@ -1575,6 +1584,7 @@ fn get_memory_info(
     Ok((size, plug))
 }
 
+#[cfg(feature = "kata-legacy")]
 fn get_volume_capacity_stats(path: &str) -> Result<VolumeUsage> {
     let mut usage = VolumeUsage::new();
 
@@ -1588,6 +1598,7 @@ fn get_volume_capacity_stats(path: &str) -> Result<VolumeUsage> {
     Ok(usage)
 }
 
+#[cfg(feature = "kata-legacy")]
 fn get_volume_inode_stats(path: &str) -> Result<VolumeUsage> {
     let mut usage = VolumeUsage::new();
 
@@ -1928,6 +1939,7 @@ fn do_copy_file(req: &CopyFileRequest) -> Result<()> {
     Ok(())
 }
 
+#[cfg(feature = "kata-legacy")]
 async fn do_add_swap(sandbox: &Arc<Mutex<Sandbox>>, req: &AddSwapRequest) -> Result<()> {
     let mut slots = Vec::new();
     for slot in &req.PCIPath {
@@ -2050,14 +2062,17 @@ mod tests {
 
     use super::*;
     use crate::{namespace::Namespace, protocols::agent_ttrpc_async::AgentService as _};
-    use nix::mount;
-    #[cfg(feature = "kata-net")]
-    use nix::sched::{unshare, CloneFlags};
     use oci::{Hook, Hooks, Linux, LinuxDeviceCgroup, LinuxNamespace, LinuxResources};
     use tempfile::{tempdir, TempDir};
     use test_utils::{assert_result, skip_if_not_root};
     use ttrpc::{r#async::TtrpcContext, MessageHeader};
     use which::which;
+
+    #[cfg(feature = "kata-legacy")]
+    use nix::mount;
+
+    #[cfg(feature = "kata-net")]
+    use nix::sched::{unshare, CloneFlags};
 
     const CGROUP_PARENT: &str = "kata.agent.test.k8s.io";
 
@@ -2754,6 +2769,7 @@ OtherField:other
     }
 
     #[tokio::test]
+    #[cfg(feature = "kata-legacy")]
     async fn test_volume_capacity_stats() {
         skip_if_not_root!();
 
@@ -2785,6 +2801,7 @@ OtherField:other
         assert_eq!(stats.available, available - size);
     }
 
+    #[cfg(feature = "kata-legacy")]
     fn get_block_size(path: &str) -> Result<u64, Errno> {
         let stat = statfs::statfs(path)?;
         let block_size = stat.block_size() as u64;
@@ -2792,6 +2809,7 @@ OtherField:other
     }
 
     #[tokio::test]
+    #[cfg(feature = "kata-legacy")]
     async fn test_get_volume_inode_stats() {
         skip_if_not_root!();
 
