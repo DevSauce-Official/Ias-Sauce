@@ -39,7 +39,7 @@ use protocols::health::{
 use protocols::types::Interface;
 use protocols::{agent_ttrpc_async as agent_ttrpc, health_ttrpc_async as health_ttrpc};
 use rustjail::cgroups::notifier;
-use rustjail::container::{BaseContainer, Container, LinuxContainer, SYSTEMD_CGROUP_PATH_FORMAT};
+use rustjail::container::{BaseContainer, LinuxContainer, SYSTEMD_CGROUP_PATH_FORMAT};
 use rustjail::mount::parse_mount_table;
 use rustjail::process::Process;
 use rustjail::specconv::CreateOpts;
@@ -151,6 +151,9 @@ const KATA_GUEST_SHARE_DIR: &str = "/run/kata-containers/shared/containers/";
 // not available.
 #[cfg(feature = "kata-net")]
 const IPTABLES_RESTORE_WAIT_SEC: u64 = 5;
+
+#[cfg(feature = "kata-pause")]
+use rustjail::container::Container;
 
 const ERR_CANNOT_GET_WRITER: &str = "Cannot get writer";
 const ERR_INVALID_BLOCK_SIZE: &str = "Invalid block size";
@@ -795,6 +798,7 @@ impl agent_ttrpc::AgentService for AgentService {
         ctr.stats().map_ttrpc_err(same)
     }
 
+    #[cfg(feature = "kata-pause")]
     async fn pause_container(
         &self,
         ctx: &TtrpcContext,
@@ -811,6 +815,7 @@ impl agent_ttrpc::AgentService for AgentService {
         Ok(Empty::new())
     }
 
+    #[cfg(feature = "kata-pause")]
     async fn resume_container(
         &self,
         ctx: &TtrpcContext,
