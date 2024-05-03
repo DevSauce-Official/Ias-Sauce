@@ -14,20 +14,15 @@ Reproduction can happen in various environments - the details here are omitted:
 
 The following steps assume the user has direct console access on the environnment that was set up.
 
-# Refresh the DNF cache
-```sudo dnf -y makecache```
-
-# Deploy required virtualization packages (e.g., VMM, kernel and Microsoft Hypervisor)
+# Deploy required virtualization packages (e.g., VMM, SEV-SNP capable kernel and Microsoft Hypervisor)
 
 Note: This step can be skipped if your environment was set up through `az aks create`
 
-Install relevant packages:
-```sudo dnf -y install kata-packages-host```
-
-Note: We currently use a [forked version](https://github.com/microsoft/confidential-containers-containerd/tree/tardev-v1.7.7) of `containerd` called `containerd-cc` which is installed as part of the `kata-packages-host` package. This containerd version is based on stock containerd with patches to support the Confidential Containers on AKS use case.
-
-Edit the grub config to boot into the SEV SNP capable kernel upon next reboot:
+Install relevant packages and modify the grub configuration to boot into the SEV-SNP capable kernel `kernel-mshv` upon next reboot:
 ```
+sudo dnf -y makecache
+sudo dnf -y install kata-packages-host
+
 boot_uuid=$(sudo grep -o -m 1 '[0-9a-f]\{8\}-[0-9a-f]\{4\}-[0-9a-f]\{4\}-[0-9a-f]\{4\}-[0-9a-f]\{12\}' /boot/efi/boot/grub2/grub.cfg)
 
 sudo sed -i -e 's@load_env -f \$bootprefix\/mariner.cfg@load_env -f \$bootprefix\/mariner-mshv.cfg\nload_env -f $bootprefix\/mariner.cfg\n@'  /boot/grub2/grub.cfg
@@ -36,8 +31,9 @@ sudo sed -i -e 's@menuentry "CBL-Mariner"@menuentry "Dom0" {\n    search --no-fl
 ```
 
 Reboot the system:
+```sudo reboot```
 
-```sudo reboot now```
+Note: We currently use a [forked version](https://github.com/microsoft/confidential-containers-containerd/tree/tardev-v1.7.7) of `containerd` called `containerd-cc` which is installed as part of the `kata-packages-host` package. This containerd version is based on stock containerd with patches to support the Confidential Containers on AKS use case.
 
 # Add Kata handler configuration snippets to containerd configuration
 
@@ -46,9 +42,10 @@ Note: This step can be skipped if your environment was set up through `az aks cr
 An editor like `vim` may need to be installed, for example:
 `sudo dnf -y install vim`
 
-Edit `/etc/containerd/config.toml` to set following configuration:
+Set the following containerd configuration in `/etc/containerd/config.toml`:
 
 ```
+sudo tee /etc/containerd/config.toml 2&>1 <<EOF
 version = 2
 oom_score = 0
 [plugins."io.containerd.grpc.v1.cri"]
@@ -99,6 +96,7 @@ oom_score = 0
   pod_annotations = ["io.katacontainers.*"]
   [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.kata-cc.options]
     ConfigPath = "/opt/confidential-containers/share/defaults/kata-containers/configuration-clh-snp.toml"
+EOF
 ```
 
 Restart containerd:
@@ -107,10 +105,10 @@ Restart containerd:
 
 # Install general build dependencies
 
-```sudo dnf install -y git vim golang rust build-essential protobuf-compiler protobuf-devel expect openssl-devel clang-devel libseccomp-devel parted qemu-img btrfs-progs-devel device-mapper-devel cmake fuse-devel jq curl kata-packages-uvm-build```
-
-If you intend to build the confpods UVM, install the following package:
-```sudo dnf install -y kernel-uvm-devel``
+```
+sudo dnf -y makecache
+sudo dnf install -y git vim golang rust build-essential protobuf-compiler protobuf-devel expect openssl-devel clang-devel libseccomp-devel parted qemu-img btrfs-progs-devel device-mapper-devel cmake fuse-devel jq curl kata-packages-uvm-build kernel-uvm-devel
+```
 
 ## Optional: Build and deploy the containerd fork from scratch
 
@@ -141,7 +139,8 @@ popd
 To build the kata-containers-cc package components and UVM, run `make all-confpods`.
 The `all` target runs the `clean[-confpods]`, `package[-confpods]` and `uvm[-confpods]` targets in a single step (the `uvm` target depends on the `package` target).
 
-**Note:** By default, a UVM with Kata Agent enforcing a restrictive policy will be built, this requiring to generate valid pod security policy annotations using the `genpolicy` tool. While always recommended to do keep doing so, a UVM with a permissive security policy can be built by adapting the file `tools/osbuilder/node-builder/azure-linux/uvm_build.sh` and changing the `AGENT_POLICY_FILE` variable assignment to `allow-all.rego`
+Note: By default, a UVM with Kata Agent enforcing a restrictive policy will be built. This requires generating valid pod security policy annotations using the `genpolicy` tool. While always recommended to do so, a UVM with a permissive security policy can be built by adapting the file `kata-containers/tools/osbuilder/node-builder/azure-linux/uvm_build.sh` and changing the `AGENT_POLICY_FILE` variable assignment to `allow-all.rego`:
+`sed -i 's/allow-set-policy/allow-all/g' kata-containers/tools/osbuilder/node-builder/azure-linux/uvm_build.sh`
 
 # Install the built components
 
@@ -161,21 +160,22 @@ popd
 
 Use e.g. `crictl` (or `ctr`) to schedule Kata(-CC) containers, referencing either the Kata or Kata-CC handlers.
 
+Note: On Kubernetes nodes, pods created via `crictl` will be deleted by the control plane.
+
 The following sets of commands serve as a general reference for installing `crictl` and setting up some basic CNI to run pods:
 - Install `crictl`, set runtime endpoint in `crictl` configuration:
 
-  `sudo dnf -y install cri-tools`
-
-  `sudo crictl config --set runtime-endpoint=unix:///run/containerd/containerd.sock`
+  ```
+  sudo dnf -y install cri-tools
+  sudo crictl config --set runtime-endpoint=unix:///run/containerd/containerd.sock
+  ```
 
 - Install CNI binaries and set a sample CNI config:
 
-  `sudo dnf -y install cni`
-
-  `sudo mv /etc/cni/net.d/99-loopback.conf.sample /etc/cni/net.d/99-loopback.conf`
-
   ```
-  sudo tee /etc/cni/net.d/10-mynet.conf <<EOF
+  sudo dnf -y install cni
+  sudo mv /etc/cni/net.d/99-loopback.conf.sample /etc/cni/net.d/99-loopback.conf
+  sudo tee /etc/cni/net.d/10-mynet.conf 2&>1 <<EOF
   {
           "cniVersion": "0.2.0",
           "name": "mynet",
@@ -199,6 +199,7 @@ The following sets of commands serve as a general reference for installing `cric
 - Create a pod manifest (and apply policy), simple example:
 
   ```
+  cat << EOF > sample-pod.yaml
   apiVersion: v1
   kind: Pod
   metadata:
@@ -209,11 +210,16 @@ The following sets of commands serve as a general reference for installing `cric
     containers:
     - image: docker.io/library/busybox:latest
       name: busybox
+  EOF
   ```
 
-- Run a Kata or Kata-CC pod with `crictl`:
+- Run a runc, Kata, or Kata-CC pod with `crictl`:
 
-  `sudo crictl runp -T 30s -r <runc/kata/kata-cc> <path/to/pod.yaml>`
+  `sudo crictl runp -T 30s -r runc sample-pod.yaml`
+
+  `sudo crictl runp -T 30s -r kata sample-pod.yaml`
+
+  `sudo crictl runp -T 30s -r kata-cc sample-pod.yaml`
 
 - Decommission pods:
 
@@ -223,13 +229,13 @@ The following sets of commands serve as a general reference for installing `cric
 
   `sudo crictl rmp <pod_id>`
 
-Examples with `crictl` for Kata and Kata-CC pods:
+Examples for `ctr` for runc, vanilla Kata and Kata-CC pods:
 - `sudo ctr image pull --snapshotter=tardev docker.io/library/busybox:latest`
 - `sudo ctr run --cni --runtime io.containerd.run.kata.v2 --runtime-config-path /usr/share/defaults/kata-containers/configuration.toml -t --rm docker.io/library/busybox:latest hello sh`
 - `sudo ctr run --cni --runtime io.containerd.run.kata-cc.v2 --runtime-config-path /opt/confidential-containers/share/defaults/kata-containers/configuration-clh-snp.toml --snapshotter tardev -t --rm docker.io/library/busybox:latest hello sh`
 
-Example with `crictl` for runc pods:
-- `sudo ctr image pull --snapshotter=tardev docker.io/library/busybox:latest`
+Example with `ctr` for runc pods:
+- `sudo ctr image pull docker.io/library/busybox:latest`
 - `sudo ctr run --cni --runtime io.containerd.run.runc.v2 -t --rm docker.io/library/busybox:latest hello sh`
 
 For further usage we refer to the upstream `crictl` (or `ctr`) and CNI documentation.
@@ -238,7 +244,7 @@ For further usage we refer to the upstream `crictl` (or `ctr`) and CNI documenta
 
 If your environment was set up through `az aks create` the respective node is ready to run Kata or Kata Confidential Containers as AKS Kubernetes pods. In any other case, you can set up your own experimental Kubernetes cluster as well.
 
-Next, apply your own runtime classes from the machine that has your kubeconfig file, e.g., for `kata-cc`:
+Next, apply the kata and kata-cc runtime classes on the machine that holds your kubeconfig file:
 ```
 cat << EOF > runtimeClass-kata-cc.yaml
 kind: RuntimeClass
@@ -275,7 +281,7 @@ kubectl apply -f runtimeClass-kata-cc.yaml runtimeClass-kata.yaml
 
 And label your node appropriately:
 ```
-kubectl label node <nodename>  katacontainers.io/kata-runtime=true
+kubectl label node <nodename> katacontainers.io/kata-runtime=true
 ```
 
 # Build attestation scenarios
