@@ -24,6 +24,9 @@ agent_install_dir="${script_dir}/agent-install"
 rootfs_make_flags="AGENT_SOURCE_BIN=${agent_install_dir}/usr/bin/kata-agent"
 
 if [ "${CONF_PODS}" == "yes" ]; then
+	# AGENT_POLICY_FILE=allow-all.rego would build a UVM with permissive security policy.
+	# The current variable assignment builds a UVM with prohibitive security policy which is the default on
+	# Confidential Containers on AKS
 	rootfs_make_flags+=" AGENT_POLICY=yes CONF_GUEST=yes AGENT_POLICY_FILE=allow-set-policy.rego"
 fi
 
@@ -42,7 +45,7 @@ popd
 
 # build rootfs, include agent binary
 pushd tools/osbuilder
-# TODO requires sudo cause of dnf-installing packages into rootfs. As a suite, following commands require sudo as well as make clean
+# This command requires sudo because of dnf-installing packages into rootfs. As a suite, following commands require sudo as well as make clean
 sudo -E PATH=$PATH make ${rootfs_make_flags} -B DISTRO=cbl-mariner rootfs
 ROOTFS_PATH="$(readlink -f ./cbl-mariner_rootfs)"
 popd

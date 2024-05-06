@@ -1,4 +1,8 @@
-#!/bin/bash
+#!/usr/bin/env bash
+#
+# Copyright (c) 2024 Microsoft Corporation
+#
+# SPDX-License-Identifier: Apache-2.0
 
 # this is where the kernel-uvm package installation places bzImage, see SPEC file
 bzimage_bin="/usr/share/cloud-hypervisor/bzImage"

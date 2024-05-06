@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 #
+# Copyright (c) 2024 Microsoft Corporation
+#
 # SPDX-License-Identifier: Apache-2.0
 
 set -o errexit
@@ -27,6 +29,8 @@ if [ "${CONF_PODS}" == "no" ]; then
 	runtime_make_flags+=" DEFSTATICRESOURCEMGMT_CLH=true KERNELPATH_CLH=${kernel_binary_location}"
 fi
 
+# add BUILD_TYPE=debug to build a debug agent (result in significantly increased agent binary size)
+# this will require to add same flag to the `make install` section for the agent in uvm_build.sh
 agent_make_flags="LIBC=gnu OPENSSL_NO_VENDOR=Y"
 
 if [ "${CONF_PODS}" == "yes" ]; then
@@ -58,7 +62,7 @@ pushd src/runtime/
 if [ "${CONF_PODS}" == "yes" ]; then
 	make ${runtime_make_flags}
 else
-	#TODO cannot add the kernelparams above, quotation issue
+	# cannot add the kernelparams above, quotation issue
 	make ${runtime_make_flags} KERNELPARAMS="systemd.legacy_systemd_cgroup_controller=yes systemd.unified_cgroup_hierarchy=0"
 fi
 popd
@@ -67,15 +71,13 @@ popd
 pushd src/runtime/config/
 if [ "${CONF_PODS}" == "yes" ]; then
 	# create a debug config
-	# TODO: Evaluate whether to integrate this into the makefile. Nobody has done this so far however
 	cp "${shim_config_file_name}" "${shim_dbg_config_file_name}"
 	sed -i "s|${igvm_file_name}|${igvm_dbg_file_name}|g" "${shim_dbg_config_file_name}"
 	sed -i '/^#enable_debug =/s|^#||g' "${shim_dbg_config_file_name}"
 	sed -i '/^#debug_console_enabled =/s|^#||g' "${shim_dbg_config_file_name}"
 else
-	# TODO: Convert kata to using an image instead of initrd, aligned with our Kata-CC image usage.
 	# We currently use the default config snippet from upstream that defaults to IMAGEPATH/image for the config.
-	# Once we shift to using an image for vanilla Kata, we can use IMAGEPATH to set the proper path (or better make sure the image file gets placed so that default values can be used).
+	# If we shift to using an image for vanilla Kata, we can use IMAGEPATH to set the proper path (or better make sure the image file gets placed so that default values can be used).
 	sed -i -e "s|image = .*$|initrd = \"${uvm_path}/${initrd_file_name}\"|" "${shim_config_file_name}"
 fi
 popd
