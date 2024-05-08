@@ -4,6 +4,8 @@ import subprocess
 import sys
 import json
 import time
+from pathlib import Path
+
 # runs genpolicy tools on the following files
 # should run this after any change to genpolicy
 # usage: python3 update_policy_samples.py
@@ -58,11 +60,13 @@ with concurrent.futures.ThreadPoolExecutor(max_workers=os.cpu_count()) as execut
     futures = []
 
     for file in default_yamls + no_policy + needs_containerd_pull:
-        cmd = f"sudo {genpolicy_path} -d -y {os.path.join(file_base_path, file)}"
+        rego_file = "/tmp/" + Path(os.path.basename(file)).stem + "-rego.txt"
+        cmd = f"{genpolicy_path} -r -u -d -y {os.path.join(file_base_path, file)} > {rego_file}"
         futures.append(executor.submit(timeRunCmd, cmd))
 
     for file in silently_ignored:
-        cmd = f"sudo {genpolicy_path} -d -s -y {os.path.join(file_base_path, file)}"
+        rego_file = "/tmp/" + Path(os.path.basename(file)).stem + "-rego.txt"
+        cmd = f"{genpolicy_path} -r -u -d -s -y {os.path.join(file_base_path, file)} > {rego_file}"
         futures.append(executor.submit(timeRunCmd, cmd))
 
     for future in concurrent.futures.as_completed(futures):
