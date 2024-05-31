@@ -192,7 +192,7 @@ function deploy_kata() {
 
 	if [ "${KATA_HOST_OS}" = "cbl-mariner" ]; then
 		yq -i \
-		  '.spec.template.spec.containers[0].env[6].value = "initrd kernel default_vcpus"' \
+		  '.spec.template.spec.containers[0].env[6].value = "image kernel default_vcpus"' \
 		  "${tools_dir}/packaging/kata-deploy/kata-deploy/base/kata-deploy.yaml"
 		yq -i \
 		  ".spec.template.spec.containers[0].env += [{\"name\": \"HOST_OS\", \"value\": \"${KATA_HOST_OS}\"}]" \

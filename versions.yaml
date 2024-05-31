@@ -145,6 +145,9 @@ assets:
         nvidia-gpu-confidential:
           name: *default-image-name
           version: "jammy"
+        mariner:
+          name: "cbl-mariner"
+          version: "2.0"
 
     meta:
       image-type: *default-image-name
@@ -181,9 +184,6 @@ assets:
         confidential:
           name: *glibc-initrd-name
           version: *glibc-initrd-version
-        mariner:
-          name: "cbl-mariner"
-          version: "2.0"
         nvidia-gpu:
           name: *glibc-initrd-name
           version: "jammy"

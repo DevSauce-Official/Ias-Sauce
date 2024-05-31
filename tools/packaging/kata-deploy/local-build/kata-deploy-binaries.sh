@@ -116,6 +116,7 @@ options:
 	stratovirt
 	rootfs-image
 	rootfs-image-confidential
+	rootfs-image-mariner
 	rootfs-initrd
 	rootfs-initrd-confidential
 	rootfs-initrd-mariner
@@ -340,6 +341,11 @@ install_image_confidential() {
 	install_image "confidential"
 }
 
+#Install Mariner guest image
+install_image_mariner() {
+	install_image "mariner"
+}
+
 #Install guest initrd
 install_initrd() {
 	local variant="${1:-}"
@@ -412,7 +418,8 @@ install_initrd_confidential() {
 
 #Install Mariner guest initrd
 install_initrd_mariner() {
-	install_initrd "mariner"
+	#TODO: remove install_initrd_mariner when CI GHA doesn't depend on it anymore.
+	return 0
 }
 
 #Instal NVIDIA GPU image
@@ -989,6 +996,7 @@ handle_build() {
 		install_firecracker
 		install_image
 		install_image_confidential
+		install_image_mariner
 		install_initrd
 		install_initrd_confidential
 		install_initrd_mariner
@@ -1057,6 +1065,8 @@ handle_build() {
 	rootfs-image) install_image ;;
 
 	rootfs-image-confidential) install_image_confidential ;;
+
+	rootfs-image-mariner) install_image_mariner ;;
 
 	rootfs-initrd) install_initrd ;;
 
@@ -1228,6 +1238,7 @@ main() {
 		stratovirt
 		rootfs-image
 		rootfs-image-confidential
+		rootfs-image-mariner
 		rootfs-initrd
 		rootfs-initrd-confidential
 		rootfs-initrd-mariner
