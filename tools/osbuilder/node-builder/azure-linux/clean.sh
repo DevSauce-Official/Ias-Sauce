@@ -37,6 +37,9 @@ pushd tools/osbuilder/
 sudo -E PATH=$PATH make DISTRO=cbl-mariner clean
 popd
 
+echo "Clean IGVM tool installation"
+
+
 if [ "${CONF_PODS}" == "yes" ]; then
 
 	echo "Clean SNP debug shim config"

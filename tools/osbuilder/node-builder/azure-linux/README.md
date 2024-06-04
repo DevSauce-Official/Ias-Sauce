@@ -76,7 +76,7 @@ sudo tee -a /etc/containerd/config.toml 2&>1 <<EOF
 EOF
 ```
 
-Restart containerd (ensureing the configuration file is intact):
+Restart containerd (ensuring the configuration file is intact):
 
 ```sudo systemctl restart containerd```
 
@@ -86,6 +86,18 @@ Restart containerd (ensureing the configuration file is intact):
 sudo dnf -y makecache
 sudo dnf -y install git vim golang rust build-essential protobuf-compiler protobuf-devel expect openssl-devel clang-devel libseccomp-devel parted qemu-img btrfs-progs-devel device-mapper-devel cmake fuse-devel jq curl kata-packages-uvm-build kernel-uvm-devel
 ```
+
+**Note:** The kernel-uvm-devel package in step above is only required for Confidential Containers and can be omitted for regular Kata Containers builds.
+
+When intending to build the components for Confidential Containers, install the IGVM tool that will be used by the build tooling to create IGVM files with their reference measurements for the ConfPods UVM.
+
+```
+pushd kata-containers/tools/osbuilder/igvm-builder
+./igvm_builder.sh -i
+popd
+```
+
+This installs the latest release of the [IGVM tooling](https://github.com/microsoft/igvm-tooling/) using `pip3 install`. The tool can be uninstalled at any time by calling the script using the -u parameter.
 
 # Optional: Build and deploy the containerd fork from scratch
 
@@ -128,7 +140,6 @@ The `all[-confpods]` target runs the targets `package[-confpods]` and `uvm[-conf
 Notes:
   - To retrieve more detailed build output, prefix the make commands with `DEBUG=1`.
   - For build and deployment of both Kata and Kata-CC artifacts, first run the `make all` and `make deploy` commands to build and install the Kata Containers for AKS components followed by `make clean`, and then run `make all-confpods` and `make deploy-confpods` to build and install the Confidential Containers for AKS components - or vice versa (using `make clean-confpods`).
-  - The `uvm-confpods` target includes a step that installs the latest release of the [IGVM tooling](https://github.com/microsoft/igvm-tooling/) using `pip3 install` while the `clean-confpods` target uninstalls the `msigvm` pip package. To modify this behavior, the scripting should be adapted according to individuals' needs.
 
 # Run Kata (Confidential) Containers
 
