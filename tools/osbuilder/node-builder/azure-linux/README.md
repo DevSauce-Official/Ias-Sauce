@@ -93,11 +93,11 @@ When intending to build the components for Confidential Containers, install the 
 
 ```
 pushd kata-containers/tools/osbuilder/igvm-builder
-./igvm_builder.sh -i
+sudo ./igvm_builder.sh -i
 popd
 ```
 
-This installs the latest release of the [IGVM tooling](https://github.com/microsoft/igvm-tooling/) using `pip3 install`. The tool can be uninstalled at any time by calling the script using the -u parameter.
+This command installs the latest release of the [IGVM tooling](https://github.com/microsoft/igvm-tooling/) using `pip3 install`. The tool can be uninstalled at any time by calling the script using the -u parameter instead.
 
 # Optional: Build and deploy the containerd fork from scratch
 
