@@ -29,10 +29,13 @@ mkdir -p "${PREFIX}/${SHIM_BINARIES_PATH}"
 
 if [ "${CONF_PODS}" == "yes" ]; then
 	echo "Installing tardev-snapshotter binaries and service file"
+	mkdir -p ${PREFIX}/usr/sbin
 	cp -a --backup=numbered src/utarfs/target/release/utarfs ${PREFIX}/usr/sbin/mount.tar
+	mkdir -p ${PREFIX}/usr/sbin
 	cp -a --backup=numbered src/overlay/target/release/kata-overlay ${PREFIX}/usr/bin/
 	cp -a --backup=numbered src/tardev-snapshotter/target/release/tardev-snapshotter ${PREFIX}/usr/bin/
-	cp -a --backup=numbered src/tardev-snapshotter/tardev-snapshotter.service ${PREFIX}//usr/lib/systemd/system/
+	mkdir -p ${PREFIX}/usr/lib/systemd/system/
+	cp -a --backup=numbered src/tardev-snapshotter/tardev-snapshotter.service ${PREFIX}/usr/lib/systemd/system/
 
 	echo "Installing SNP shim debug configuration"
 	cp -a --backup=numbered src/runtime/config/"${SHIM_DBG_CONFIG_FILE_NAME}" "${PREFIX}/${SHIM_CONFIG_PATH}"
