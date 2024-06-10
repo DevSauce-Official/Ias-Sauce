@@ -75,7 +75,7 @@ if [ "${CONF_PODS}" == "yes" ]; then
 else
 	# We currently use the default config snippet from upstream that defaults to IMAGEPATH/image for the config.
 	# If we shift to using an image for vanilla Kata, we can use IMAGEPATH to set the proper path (or better make sure the image file gets placed so that default values can be used).
-	sed -i -e "s|image = .*$|initrd = \"${UVM_PATH}/${initrd_file_name}\"|" "${SHIM_CONFIG_FILE_NAME}"
+	sed -i -e "s|image = .*$|initrd = \"${UVM_PATH}/${INITRD_FILE_NAME}\"|" "${SHIM_CONFIG_FILE_NAME}"
 fi
 popd
 

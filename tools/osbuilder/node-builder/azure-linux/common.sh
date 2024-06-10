@@ -25,7 +25,7 @@ if [ "${CONF_PODS}" == "yes" ]; then
 else
 	INSTALL_PATH_PREFIX="/usr"
 	UVM_PATH="/var/cache/kata-containers/osbuilder-images/kernel-uvm"
-	initrd_file_name="kata-containers-initrd.img"
+	INITRD_FILE_NAME="kata-containers-initrd.img"
 	SHIM_CONFIG_PATH="${INSTALL_PATH_PREFIX}/share/defaults/kata-containers"
 	SHIM_CONFIG_FILE_NAME="configuration-clh.toml"
 	DEBUGGING_BINARIES_PATH="${INSTALL_PATH_PREFIX}/local/bin"
