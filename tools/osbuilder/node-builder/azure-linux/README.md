@@ -135,7 +135,7 @@ sudo make deploy-confpods
 popd
 ```
 
-The `all[-confpods]` target runs the targets `package[-confpods]` and `uvm[-confpods]` in a single step (the `uvm[-confpods]` target depends on the `package[-confpods]` target). The `deploy[-confpods]` target moves the build artifacts to proper places.
+The `all[-confpods]` target runs the targets `package[-confpods]` and `uvm[-confpods]` in a single step (the `uvm[-confpods]` target depends on the `package[-confpods]` target). The `deploy[-confpods]` target moves the build artifacts to proper places (and calls into `deploy[-confpods]-package`, `deploy[-confpods]-uvm`).
 
 Notes:
   - To retrieve more detailed build output, prefix the make commands with `DEBUG=1`.
