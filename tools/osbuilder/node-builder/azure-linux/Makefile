@@ -36,11 +36,11 @@ clean-confpods:
 deploy: deploy-package deploy-uvm
 
 .PHONY: deploy-package
-deploy:
+deploy-package:
 	./package_install.sh
 
 .PHONY: deploy-uvm
-deploy:
+deploy-uvm:
 	./uvm_install.sh
 
 .PHONY: deploy-confpods

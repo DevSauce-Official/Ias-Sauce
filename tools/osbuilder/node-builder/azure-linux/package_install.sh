@@ -31,7 +31,7 @@ if [ "${CONF_PODS}" == "yes" ]; then
 	echo "Installing tardev-snapshotter binaries and service file"
 	mkdir -p ${PREFIX}/usr/sbin
 	cp -a --backup=numbered src/utarfs/target/release/utarfs ${PREFIX}/usr/sbin/mount.tar
-	mkdir -p ${PREFIX}/usr/sbin
+	mkdir -p ${PREFIX}/usr/bin
 	cp -a --backup=numbered src/overlay/target/release/kata-overlay ${PREFIX}/usr/bin/
 	cp -a --backup=numbered src/tardev-snapshotter/target/release/tardev-snapshotter ${PREFIX}/usr/bin/
 	mkdir -p ${PREFIX}/usr/lib/systemd/system/
