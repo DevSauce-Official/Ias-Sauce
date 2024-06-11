@@ -181,7 +181,7 @@ create_summary_file()
 	[ "$AGENT_INIT" = yes ] && agent="${init}"
 
 	local -r agentdir="${script_dir}/../../../"
-	local -r agent_version=$(cat ${agentdir}/VERSION 2> /dev/null)
+	local agent_version=$(cat ${agentdir}/VERSION 2> /dev/null)
 	[ -z "$agent_version" ] && agent_version="unknown"
 
 	cat >"$file"<<-EOF
