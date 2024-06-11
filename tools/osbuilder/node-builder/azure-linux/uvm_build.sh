@@ -37,16 +37,14 @@ fi
 
 pushd "${repo_dir}"
 
-echo "Building rootfs and including pre-built agent binary from staging directory"
+echo "Building rootfs and including pre-built agent binary"
 pushd tools/osbuilder
 # This command requires sudo because of dnf-installing packages into rootfs. As a suite, following commands require sudo as well as make clean
 sudo -E PATH=$PATH make ${rootfs_make_flags} -B DISTRO=cbl-mariner rootfs
 ROOTFS_PATH="$(readlink -f ./cbl-mariner_rootfs)"
 popd
 
-# Could call make install-services but above make install already calls make install-services which copied the service files to the staging area
-# Further, observing some rustup error when directly calling make install-services
-echo "Installing agent service files from staging directory into rootfs"
+echo "Installing agent service files into rootfs"
 sudo cp ${agent_install_dir}/usr/lib/systemd/system/kata-containers.target ${ROOTFS_PATH}/usr/lib/systemd/system/kata-containers.target
 sudo cp ${agent_install_dir}/usr/lib/systemd/system/kata-agent.service ${ROOTFS_PATH}/usr/lib/systemd/system/kata-agent.service
 
