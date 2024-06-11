@@ -372,11 +372,15 @@ build_rootfs_distro()
 		mkdir -p ${ROOTFS_DIR}
 	fi
 
-	# need to detect rustc's version too?
-	detect_rust_version ||
-		die "Could not detect the required rust version for AGENT_VERSION='${AGENT_VERSION:-main}'."
+	# this check seems duplicate to the check in setup_rootfs, and we should
+	# also only need this check when we need to build the agent (see setup_rootfs)
+	if [ -z "${AGENT_SOURCE_BIN}" ] ; then
+		# need to detect rustc's version too?
+		detect_rust_version ||
+			die "Could not detect the required rust version for AGENT_VERSION='${AGENT_VERSION:-main}'."
 
-	echo "Required rust version: $RUST_VERSION"
+		echo "Required rust version: $RUST_VERSION"
+	fi
 
 	if [ "${SELINUX}" == "yes" ]; then
 		if [ "${AGENT_INIT}" == "yes" ]; then
