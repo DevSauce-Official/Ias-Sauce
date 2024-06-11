@@ -18,10 +18,8 @@ repo_dir="${script_dir}/../../../../"
 common_file="common.sh"
 source "${common_file}"
 
-agent_install_dir="${script_dir}/agent-install"
-
 # This ensures that a pre-built agent binary is being injected into the rootfs
-rootfs_make_flags="AGENT_SOURCE_BIN=${agent_install_dir}/usr/bin/kata-agent"
+rootfs_make_flags="AGENT_SOURCE_BIN=${AGENT_INSTALL_DIR}/usr/bin/kata-agent"
 
 if [ "${CONF_PODS}" == "yes" ]; then
 	# AGENT_POLICY_FILE=allow-all.rego would build a UVM with permissive security policy.
@@ -38,11 +36,6 @@ if [ "${CONF_PODS}" == "yes" ]; then
 fi
 
 pushd "${repo_dir}"
-
-echo "Moving agent build artifacts to staging directory"
-pushd src/agent/
-make install LIBC=gnu DESTDIR=${agent_install_dir}
-popd
 
 echo "Building rootfs and including pre-built agent binary from staging directory"
 pushd tools/osbuilder

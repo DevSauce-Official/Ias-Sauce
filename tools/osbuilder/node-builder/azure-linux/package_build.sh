@@ -28,7 +28,7 @@ fi
 
 # add BUILD_TYPE=debug to build a debug agent (result in significantly increased agent binary size)
 # this will require to add same flag to the `make install` section for the agent in uvm_build.sh
-agent_make_flags="LIBC=gnu OPENSSL_NO_VENDOR=Y"
+agent_make_flags="LIBC=gnu OPENSSL_NO_VENDOR=Y DESTDIR=${AGENT_INSTALL_DIR}"
 
 if [ "${CONF_PODS}" == "yes" ]; then
 	agent_make_flags+=" AGENT_POLICY=yes"
@@ -79,9 +79,10 @@ else
 fi
 popd
 
-echo "Building agent binary"
+echo "Building agent binary and generating service files"
 pushd src/agent/
 make ${agent_make_flags}
+make install ${agent_make_flags}
 popd
 
 popd

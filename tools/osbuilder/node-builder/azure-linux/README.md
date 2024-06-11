@@ -84,7 +84,7 @@ Restart containerd (ensuring the configuration file is intact):
 
 ```
 sudo dnf -y makecache
-sudo dnf -y install git vim golang rust build-essential protobuf-compiler protobuf-devel expect openssl-devel clang-devel libseccomp-devel parted qemu-img btrfs-progs-devel device-mapper-devel cmake fuse-devel jq curl kata-packages-uvm-build kernel-uvm-devel
+sudo dnf -y install git vim golang rust cargo build-essential protobuf-compiler protobuf-devel expect openssl-devel clang-devel libseccomp-devel parted qemu-img btrfs-progs-devel device-mapper-devel cmake fuse-devel jq curl kata-packages-uvm-build kernel-uvm-devel
 ```
 
 **Note:** The kernel-uvm-devel package in step above is only required for Confidential Containers and can be omitted for regular Kata Containers builds.

@@ -35,6 +35,7 @@ fi
 
 KERNEL_BINARY_LOCATION="/usr/share/cloud-hypervisor/vmlinux.bin"
 VIRTIOFSD_BINARY_LOCATION="/usr/libexec/virtiofsd-rs"
+AGENT_INSTALL_DIR="${script_dir}/agent-install"
 
 set_uvm_kernel_vars() {
 	UVM_KERNEL_VERSION=$(rpm -q --queryformat '%{VERSION}' kernel-uvm-devel)
