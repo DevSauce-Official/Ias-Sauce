@@ -63,7 +63,7 @@ if [ "${CONF_PODS}" == "yes" ]; then
 	echo "Building IGVM and UVM measurement files"
 	pushd tools/osbuilder
 	sudo chmod o+r root_hash.txt
-	make igvm DISTRO=cbl-mariner
+	sudo make igvm DISTRO=cbl-mariner
 	popd
 else
 	echo "Creating initrd based on rootfs"

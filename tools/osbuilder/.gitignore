@@ -10,3 +10,4 @@ kata-containers.img
 rootfs-builder/centos/RPM-GPG-KEY-*
 typescript
 node-builder/azure-linux/agent-install
+igvm-builder/igvm-tooling

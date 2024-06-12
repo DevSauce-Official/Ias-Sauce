@@ -56,10 +56,11 @@ fi
 
 echo "Building shim binary and configuration"
 pushd src/runtime/
-if [ "${CONF_PODS}" == "yes" ]; then
+if [ "${CONF_PODS}" == "yes" ] || [ "${OS_VERSION}" == "3.0" ]; then
 	make ${runtime_make_flags}
 else
-	# cannot add the kernelparams in initial assignment, quotation issue
+	# Mariner 2 uses cgroupsv1 - can potentially be removed as this is supposed to be set by systemd.cfg
+	# note: also, cannot add the kernelparams in initial assignment, quotation issue
 	make ${runtime_make_flags} KERNELPARAMS="systemd.legacy_systemd_cgroup_controller=yes systemd.unified_cgroup_hierarchy=0"
 fi
 popd

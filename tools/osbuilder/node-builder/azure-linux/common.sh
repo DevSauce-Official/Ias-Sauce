@@ -8,6 +8,10 @@ script_dir="$(dirname $(readlink -f $0))"
 lib_file="${script_dir}/../../scripts/lib.sh"
 source "${lib_file}"
 
+OS_VERSION=${OS_VERSION:-2.0}
+
+([[ "${OS_VERSION}" == "2.0" ]] || [[ "${OS_VERSION}" == "3.0" ]]) || die "OS_VERSION: must equal 2.0 (default) or 3.0"
+
 if [ "${CONF_PODS}" == "yes" ]; then
 	INSTALL_PATH_PREFIX="/opt/confidential-containers"
 	UVM_PATH="${INSTALL_PATH_PREFIX}/share/kata-containers"
@@ -34,7 +38,13 @@ else
 fi
 
 KERNEL_BINARY_LOCATION="/usr/share/cloud-hypervisor/vmlinux.bin"
-VIRTIOFSD_BINARY_LOCATION="/usr/libexec/virtiofsd-rs"
+# Mariner 3: different binary name
+if [ "${OS_VERSION}" == "2.0" ]; then
+	VIRTIOFSD_BINARY_LOCATION="/usr/libexec/virtiofsd-rs"
+else
+	VIRTIOFSD_BINARY_LOCATION="/usr/libexec/virtiofsd"
+fi
+
 AGENT_INSTALL_DIR="${script_dir}/agent-install"
 
 set_uvm_kernel_vars() {
