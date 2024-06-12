@@ -93,7 +93,7 @@ When intending to build the components for Confidential Containers, install the 
 
 ```
 pushd kata-containers/tools/osbuilder/igvm-builder
-sudo ./igvm_builder.sh -i
+./igvm_builder.sh -i
 popd
 ```
 

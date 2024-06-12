@@ -7,7 +7,7 @@
 # this is where the kernel-uvm package installation places bzImage, see SPEC file
 BZIMAGE_BIN="/usr/share/cloud-hypervisor/bzImage"
 
-IGVM_EXTRACT_FOLDER="igvm-tooling"
+IGVM_EXTRACT_FOLDER="${SCRIPT_DIR}/igvm-tooling"
 CLH_ACPI_TABLES_DIR="${IGVM_EXTRACT_FOLDER}/src/igvm/acpi/acpi-clh/"
 IGVM_PY_FILE="${IGVM_EXTRACT_FOLDER}/src/igvm/igvmgen.py"
 
