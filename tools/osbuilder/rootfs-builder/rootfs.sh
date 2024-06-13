@@ -372,15 +372,6 @@ build_rootfs_distro()
 		mkdir -p ${ROOTFS_DIR}
 	fi
 
-	# early check for rust version if agent needs to be built later on (see setup_rootfs)
-	if [ -z "${AGENT_SOURCE_BIN}" ] ; then
-		# need to detect rustc's version too?
-		detect_rust_version ||
-			die "Could not detect the required rust version for AGENT_VERSION='${AGENT_VERSION:-main}'."
-
-		echo "Required rust version: $RUST_VERSION"
-	fi
-
 	if [ "${SELINUX}" == "yes" ]; then
 		if [ "${AGENT_INIT}" == "yes" ]; then
 			die "Guest SELinux with the agent init is not supported yet"
