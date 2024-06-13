@@ -353,16 +353,16 @@ allow_linux(p_oci, i_oci) {
     allow_readonly_paths(p_oci, i_oci)
 
     i_devices := i_oci.Linux.Resources.Devices
-    print("allow_linux: i_devices =", i_devices)
+    print("allow_linux: i Linux.Resources.Devices =", i_devices)
     count(i_devices) == 0
 
-    i_uidmap := i_oci.Linux.UIDMappings
-    print("allow_linux: i UIDMappings =", i_uidmap)
-    count(i_uidmap) == 0
+    i_uidmappings := i_oci.Linux.UIDMappings
+    print("allow_linux: i UIDMappings =", i_uidmappings)
+    count(i_uidmappings) == 0
 
-    i_gidmap := i_oci.Linux.GIDMappings
-    print("allow_linux: i GIDMappings =", i_gidmap)
-    count(i_gidmap) == 0
+    i_gidmappings := i_oci.Linux.GIDMappings
+    print("allow_linux: i GIDMappings =", i_gidmappings)
+    count(i_gidmappings) == 0
 
     print("allow_linux: true")
 }
