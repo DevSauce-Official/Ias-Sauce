@@ -82,6 +82,9 @@ CreateContainerRequest {
 
     allow_linux(p_oci, i_oci)
 
+    print("CreateContainerRequest: input.shared_mounts =", input.shared_mounts)
+    count(input.shared_mounts) == 0
+
     print("CreateContainerRequest: true")
 }
 
