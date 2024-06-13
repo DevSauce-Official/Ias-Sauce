@@ -88,6 +88,9 @@ CreateContainerRequest {
     print("CreateContainerRequest: i_mounts =", i_mounts)
     count(i_mounts) == 0
 
+    print("CreateContainerRequest: string_user =", input.string_user)
+    is_null(input.string_user)
+
     print("CreateContainerRequest: true")
 }
 
@@ -474,11 +477,14 @@ allow_process(p_oci, i_oci, s_name) {
     print("allow_process: i terminal =", i_process.Terminal, "p terminal =", p_process.Terminal)
     p_process.Terminal == i_process.Terminal
 
-    print("allow_process: i cwd =", i_process.Cwd, "i cwd =", p_process.Cwd)
+    print("allow_process: i cwd =", i_process.Cwd, "p cwd =", p_process.Cwd)
     p_process.Cwd == i_process.Cwd
 
     print("allow_process: i noNewPrivileges =", i_process.NoNewPrivileges, "p noNewPrivileges =", p_process.NoNewPrivileges)
     p_process.NoNewPrivileges == i_process.NoNewPrivileges
+
+    print("allow_process: i SelinuxLabel =", i_process.SelinuxLabel, "p cwd =", p_process.Cwd)
+    p_process.SelinuxLabel == i_process.SelinuxLabel
 
     allow_caps(p_process.Capabilities, i_process.Capabilities)
     allow_user(p_process, i_process)
@@ -491,6 +497,9 @@ allow_process(p_oci, i_oci, s_name) {
 allow_user(p_process, i_process) {
     p_user := p_process.User
     i_user := i_process.User
+
+    print("allow_user: i Username =", i_user.Username, "p Username =", p_user.Username)
+    p_user.Username == i_user.Username
 
     print("allow_user: input uid =", i_user.UID, "policy uid =", p_user.UID)
     p_user.UID == i_user.UID

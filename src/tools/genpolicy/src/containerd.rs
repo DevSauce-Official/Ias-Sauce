@@ -33,6 +33,7 @@ pub fn get_process(privileged_container: bool, common: &policy::CommonData) -> p
         Cwd: "/".to_string(),
         Capabilities: capabilities,
         NoNewPrivileges: false,
+        SelinuxLabel: String::new(),
     }
 }
 
