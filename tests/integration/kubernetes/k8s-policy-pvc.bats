@@ -9,6 +9,7 @@ load "${BATS_TEST_DIRNAME}/../../common.bash"
 load "${BATS_TEST_DIRNAME}/tests_common.sh"
 
 setup() {
+	( [ "${KATA_HYPERVISOR}" == "qemu-sev" ] || [ "${KATA_HYPERVISOR}" == "qemu-snp" ] ) && skip "https://github.com/kata-containers/kata-containers/issues/9846"
 	auto_generate_policy_enabled || skip "Auto-generated policy tests are disabled."
 
 	pod_name="policy-pod-pvc"
@@ -53,6 +54,7 @@ test_pod_policy_error() {
 }
 
 teardown() {
+	( [ "${KATA_HYPERVISOR}" == "qemu-sev" ] || [ "${KATA_HYPERVISOR}" == "qemu-snp" ] ) && skip "https://github.com/kata-containers/kata-containers/issues/9846"
 	auto_generate_policy_enabled || skip "Auto-generated policy tests are disabled."
 
 	# Debugging information. Don't print the "Message:" line because it contains a truncated policy log.
