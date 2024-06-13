@@ -354,6 +354,9 @@ allow_linux(p_oci, i_oci) {
     allow_readonly_paths(p_oci, i_oci)
     allow_linux_devices(p_oci.Linux.Devices, i_oci.Linux.Devices)
 
+    print("allow_linux: i_oci.Linux.Resources.Devices =", i_oci.Linux.Resources.Devices)
+    count(i_oci.Linux.Resources.Devices) == 0
+
     print("allow_linux: true")
 }
 
