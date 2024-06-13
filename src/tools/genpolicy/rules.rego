@@ -341,32 +341,22 @@ allow_log_directory(p_oci, i_oci) {
 }
 
 allow_linux(p_oci, i_oci) {
-    p_namespaces := p_oci.Linux.Namespaces
-    print("allow_linux: p namespaces =", p_namespaces)
+    p_linux = p_oci.Linux
+    print("allow_linux: p_linux =", p_linux)
 
-    i_namespaces := i_oci.Linux.Namespaces
-    print("allow_linux: i namespaces =", i_namespaces)
+    i_linux = i_oci.Linux
+    print("allow_linux: i_linux =", i_linux)
 
-    p_namespaces == i_namespaces
+    p_linux.Namespaces == i_linux.Namespaces
+
+    count(i_linux.Resources.Devices) == 0
+    count(i_linux.UIDMappings) == 0
+    count(i_linux.GIDMappings) == 0
+    i_linux.Sysctl == {}
+    is_null(i_linux.Resources.Pids)
 
     allow_masked_paths(p_oci, i_oci)
     allow_readonly_paths(p_oci, i_oci)
-
-    i_devices := i_oci.Linux.Resources.Devices
-    print("allow_linux: i Linux.Resources.Devices =", i_devices)
-    count(i_devices) == 0
-
-    i_uidmappings := i_oci.Linux.UIDMappings
-    print("allow_linux: i UIDMappings =", i_uidmappings)
-    count(i_uidmappings) == 0
-
-    i_gidmappings := i_oci.Linux.GIDMappings
-    print("allow_linux: i GIDMappings =", i_gidmappings)
-    count(i_gidmappings) == 0
-
-    i_sysctl := i_oci.Linux.Sysctl
-    print("allow_linux: i Sysctl =", i_sysctl)
-    i_sysctl == {}
 
     print("allow_linux: true")
 }
