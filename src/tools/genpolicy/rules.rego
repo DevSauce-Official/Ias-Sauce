@@ -354,6 +354,8 @@ allow_linux(p_oci, i_oci) {
     count(i_linux.GIDMappings) == 0
     i_linux.Sysctl == {}
     is_null(i_linux.Resources.Pids)
+    is_null(i_linux.Resources.BlockIO)
+    is_null(i_linux.Resources.Network)
 
     allow_masked_paths(p_oci, i_oci)
     allow_readonly_paths(p_oci, i_oci)
