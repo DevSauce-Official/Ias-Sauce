@@ -356,9 +356,13 @@ allow_linux(p_oci, i_oci) {
     print("allow_linux: i_devices =", i_devices)
     count(i_devices) == 0
 
-    i_mappings := i_oci.Linux.UIDMappings
-    print("allow_linux: i_mappings =", i_mappings)
-    count(i_mappings) == 0
+    i_uidmap := i_oci.Linux.UIDMappings
+    print("allow_linux: i UIDMappings =", i_uidmap)
+    count(i_uidmap) == 0
+
+    i_gidmap := i_oci.Linux.GIDMappings
+    print("allow_linux: i GIDMappings =", i_gidmap)
+    count(i_gidmap) == 0
 
     print("allow_linux: true")
 }
