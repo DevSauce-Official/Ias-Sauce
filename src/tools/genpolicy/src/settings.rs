@@ -70,7 +70,8 @@ impl Settings {
     pub fn new(json_settings_path: &str) -> Self {
         debug!("Loading settings file...");
         if let Ok(file) = File::open(json_settings_path) {
-            let settings: Self = serde_json::from_reader(file).unwrap();
+            let settings: Self = serde_json::from_reader(file)
+                .expect(&format!("Failed to read from {}", json_settings_path));
             debug!("settings = {:?}", &settings);
             settings
         } else {

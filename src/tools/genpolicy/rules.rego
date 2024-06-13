@@ -84,6 +84,10 @@ CreateContainerRequest {
 
     allow_linux(p_oci, i_oci)
 
+    i_mounts := input.shared_mounts
+    print("CreateContainerRequest: i_mounts =", i_mounts)
+    count(i_mounts) == 0
+
     print("CreateContainerRequest: true")
 }
 
@@ -344,6 +348,10 @@ allow_linux(p_oci, i_oci) {
 
     allow_masked_paths(p_oci, i_oci)
     allow_readonly_paths(p_oci, i_oci)
+
+    i_devices := i_oci.Linux.Resources.Devices
+    print("allow_linux: i_devices =", i_devices)
+    count(i_devices) == 0
 
     print("allow_linux: true")
 }
