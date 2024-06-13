@@ -58,9 +58,6 @@ CreateContainerRequest {
     print("CreateContainerRequest: i_oci.Hooks =", i_oci.Hooks)
     is_null(i_oci.Hooks)
 
-    print("CreateContainerRequest: i_oci.Linux.Seccomp =", i_oci.Linux.Seccomp)
-    is_null(i_oci.Linux.Seccomp)
-
     some p_container in policy_data.containers
     print("======== CreateContainerRequest: trying next policy container")
 
@@ -352,7 +349,10 @@ allow_linux(p_oci, i_oci) {
     count(i_linux.Resources.Devices) == 0
     count(i_linux.UIDMappings) == 0
     count(i_linux.GIDMappings) == 0
+
     i_linux.Sysctl == {}
+
+    is_null(i_linux.Seccomp)
     is_null(i_linux.Resources.Pids)
     is_null(i_linux.Resources.BlockIO)
     is_null(i_linux.Resources.Network)
