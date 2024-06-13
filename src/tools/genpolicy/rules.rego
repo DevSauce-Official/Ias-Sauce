@@ -364,6 +364,10 @@ allow_linux(p_oci, i_oci) {
     print("allow_linux: i GIDMappings =", i_gidmappings)
     count(i_gidmappings) == 0
 
+    i_sysctl := i_oci.Linux.Sysctl
+    print("allow_linux: i Sysctl =", i_sysctl)
+    i_sysctl == {}
+
     print("allow_linux: true")
 }
 
