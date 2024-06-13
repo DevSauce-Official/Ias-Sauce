@@ -59,8 +59,8 @@ pushd src/runtime/
 if [ "${CONF_PODS}" == "yes" ] || [ "${OS_VERSION}" == "3.0" ]; then
 	make ${runtime_make_flags}
 else
-	# Mariner 2 uses cgroupsv1 - can potentially be removed as this is supposed to be set by systemd.cfg
-	# note: also, cannot add the kernelparams in initial assignment, quotation issue
+	# Mariner 2 pod sandboxing uses cgroupsv1 - note: cannot add the kernelparams in above assignments,
+	# leads to quotation issue. Hence, implementing the conditional check right here at the time of the make command
 	make ${runtime_make_flags} KERNELPARAMS="systemd.legacy_systemd_cgroup_controller=yes systemd.unified_cgroup_hierarchy=0"
 fi
 popd

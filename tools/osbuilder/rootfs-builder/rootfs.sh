@@ -372,8 +372,7 @@ build_rootfs_distro()
 		mkdir -p ${ROOTFS_DIR}
 	fi
 
-	# this check seems duplicate to the check in setup_rootfs, and we should
-	# also only need this check when we need to build the agent (see setup_rootfs)
+	# early check for rust version if agent needs to be built later on (see setup_rootfs)
 	if [ -z "${AGENT_SOURCE_BIN}" ] ; then
 		# need to detect rustc's version too?
 		detect_rust_version ||
