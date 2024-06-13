@@ -356,6 +356,10 @@ allow_linux(p_oci, i_oci) {
     print("allow_linux: i_devices =", i_devices)
     count(i_devices) == 0
 
+    i_mappings := i_oci.Linux.UIDMappings
+    print("allow_linux: i_mappings =", i_mappings)
+    count(i_mappings) == 0
+
     print("allow_linux: true")
 }
 
@@ -483,8 +487,8 @@ allow_process(p_oci, i_oci, s_name) {
     print("allow_process: i noNewPrivileges =", i_process.NoNewPrivileges, "p noNewPrivileges =", p_process.NoNewPrivileges)
     p_process.NoNewPrivileges == i_process.NoNewPrivileges
 
-    print("allow_process: i SelinuxLabel =", i_process.SelinuxLabel, "p cwd =", p_process.Cwd)
-    p_process.SelinuxLabel == i_process.SelinuxLabel
+    print("allow_process: i SelinuxLabel =", i_process.SelinuxLabel)
+    count(i_process.SelinuxLabel) == 0
 
     allow_caps(p_process.Capabilities, i_process.Capabilities)
     allow_user(p_process, i_process)

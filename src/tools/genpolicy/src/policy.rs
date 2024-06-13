@@ -149,10 +149,6 @@ pub struct KataProcess {
     /// NoNewPrivileges controls whether additional privileges could be gained by processes in the container.
     #[serde(default)]
     pub NoNewPrivileges: bool,
-
-	// SelinuxLabel specifies the selinux context that the container process is run as.
-    #[serde(default)]
-    pub SelinuxLabel: String,
 }
 
 /// OCI container User struct. This struct is very similar to the User
