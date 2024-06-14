@@ -58,6 +58,9 @@ CreateContainerRequest {
     print("CreateContainerRequest: i_oci.Hooks =", i_oci.Hooks)
     is_null(i_oci.Hooks)
 
+    is_null(i_oci.Solaris)
+    is_null(i_oci.Windows)
+
     some p_container in policy_data.containers
     print("======== CreateContainerRequest: trying next policy container")
 
@@ -353,9 +356,9 @@ allow_linux(p_oci, i_oci) {
     count(i_linux.RootfsPropagation) == 0
 
     is_null(i_linux.IntelRdt)
-    is_null(i_linux.Resources.Pids)
     is_null(i_linux.Resources.BlockIO)
     is_null(i_linux.Resources.Network)
+    is_null(i_linux.Resources.Pids)
     is_null(i_linux.Seccomp)
 
     i_linux.Sysctl == {}
