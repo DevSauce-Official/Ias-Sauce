@@ -9,6 +9,7 @@ metadata:
   name: policy-pod-pvc
 spec:
   terminationGracePeriodSeconds: 0
+  restartPolicy: Never
   runtimeClassName: kata
   containers:
     - name: busybox

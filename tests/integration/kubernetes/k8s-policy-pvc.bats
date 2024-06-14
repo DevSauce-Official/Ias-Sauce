@@ -31,8 +31,8 @@ setup() {
 }
 
 @test "Successful pod with auto-generated policy" {
-	kubectl create -f "${correct_pod_yaml}"
 	kubectl create -f "${pvc_yaml}"
+	kubectl create -f "${correct_pod_yaml}"
 	kubectl wait --for=condition=Ready "--timeout=${timeout}" pod "${pod_name}"
 }
 

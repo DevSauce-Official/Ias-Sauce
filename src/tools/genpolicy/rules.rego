@@ -15,7 +15,7 @@ default AddSwapRequest := false
 default CloseStdinRequest := false
 default CopyFileRequest := false
 default CreateContainerRequest := false
-default CreateSandboxRequest := true
+default CreateSandboxRequest := false
 default DestroySandboxRequest := true
 default ExecProcessRequest := false
 default GetOOMEventRequest := true
@@ -52,10 +52,14 @@ default WriteStreamRequest := false
 default AllowRequestsFailingPolicy := false
 
 CreateContainerRequest {
+    # Check if this request should be denied based just on the value of some input field.
+    cc_input_checks
+
     i_oci := input.OCI
     i_storages := input.storages
     i_devices := input.devices
 
+    # Check if any of the containers from the policy allows the container from the input.    
     some p_container in policy_data.containers
     print("======== CreateContainerRequest: trying next policy container")
 
@@ -83,6 +87,38 @@ CreateContainerRequest {
     allow_linux(p_oci, i_oci)
 
     print("CreateContainerRequest: true")
+}
+
+cc_input_checks {
+    print("cc_input_checks: input =", input)
+
+    count(input.shared_mounts) == 0
+    is_null(input.string_user)
+
+    i_oci := input.OCI
+    is_null(i_oci.Hooks)
+    is_null(i_oci.Linux.Seccomp)
+    is_null(i_oci.Solaris)
+    is_null(i_oci.Windows)
+
+    i_linux := i_oci.Linux
+    count(i_linux.GIDMappings) == 0
+    count(i_linux.MountLabel) == 0
+    count(i_linux.Resources.Devices) == 0
+    count(i_linux.RootfsPropagation) == 0
+    count(i_linux.UIDMappings) == 0
+#    is_null(i_linux.IntelRdt)
+#    is_null(i_linux.Resources.BlockIO)
+#    is_null(i_linux.Resources.Network)
+#    is_null(i_linux.Resources.Pids)
+#    is_null(i_linux.Seccomp)
+#    i_linux.Sysctl == {}
+
+#    i_process := i_oci.Process
+#    count(i_process.SelinuxLabel) == 0
+#    count(i_process.Username) == 0
+
+    print("cc_input_checks: true")
 }
 
 # Reject unexpected annotations.
@@ -486,7 +522,7 @@ allow_process(p_oci, i_oci, s_name) {
     print("allow_process: i terminal =", i_process.Terminal, "p terminal =", p_process.Terminal)
     p_process.Terminal == i_process.Terminal
 
-    print("allow_process: i cwd =", i_process.Cwd, "i cwd =", p_process.Cwd)
+    print("allow_process: i cwd =", i_process.Cwd, "p cwd =", p_process.Cwd)
     p_process.Cwd == i_process.Cwd
 
     print("allow_process: i noNewPrivileges =", i_process.NoNewPrivileges, "p noNewPrivileges =", p_process.NoNewPrivileges)
@@ -1069,9 +1105,12 @@ CopyFileRequest {
 }
 
 CreateSandboxRequest {
-    i_pidns := input.sandbox_pidns
-    print("CreateSandboxRequest: i_pidns =", i_pidns)
-    i_pidns == false
+    print("CreateSandboxRequest: input =", input)
+
+    count(input.guest_hook_path) == 0
+    count(input.kernel_modules) == 0
+
+    input.sandbox_pidns == false
 }
 
 ExecProcessRequest {
