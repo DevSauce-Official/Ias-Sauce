@@ -346,16 +346,17 @@ allow_linux(p_oci, i_oci) {
 
     p_linux.Namespaces == i_linux.Namespaces
 
-    count(i_linux.Resources.Devices) == 0
-    count(i_linux.UIDMappings) == 0
     count(i_linux.GIDMappings) == 0
-
-    i_linux.Sysctl == {}
+    count(i_linux.UIDMappings) == 0
+    count(i_linux.Resources.Devices) == 0
+    count(i_linux.RootfsPropagation) == 0
 
     is_null(i_linux.Seccomp)
     is_null(i_linux.Resources.Pids)
     is_null(i_linux.Resources.BlockIO)
     is_null(i_linux.Resources.Network)
+
+    i_linux.Sysctl == {}
 
     allow_masked_paths(p_oci, i_oci)
     allow_readonly_paths(p_oci, i_oci)
