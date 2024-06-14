@@ -52,8 +52,16 @@ default WriteStreamRequest := false
 default AllowRequestsFailingPolicy := false
 
 CreateContainerRequest {
+    # Get data from the input request.
     i_oci := input.OCI
     i_storages := input.storages
+
+    # Validate data from the input request
+    print("CreateContainerRequest: i shared_mounts =", input.shared_mounts)
+    count(input.shared_mounts) == 0
+
+    print("CreateContainerRequest: i string_user =", input.string_user)
+    is_null(input.string_user)
 
     print("CreateContainerRequest: i_oci.Hooks =", i_oci.Hooks)
     is_null(i_oci.Hooks)
@@ -61,6 +69,8 @@ CreateContainerRequest {
     is_null(i_oci.Solaris)
     is_null(i_oci.Windows)
 
+    # Check if any of the container data from the Policy allows the
+    # container data from the input request.
     some p_container in policy_data.containers
     print("======== CreateContainerRequest: trying next policy container")
 
@@ -83,13 +93,6 @@ CreateContainerRequest {
     allow_by_anno(p_oci, i_oci, p_storages, i_storages)
 
     allow_linux(p_oci, i_oci)
-
-    i_mounts := input.shared_mounts
-    print("CreateContainerRequest: i_mounts =", i_mounts)
-    count(i_mounts) == 0
-
-    print("CreateContainerRequest: string_user =", input.string_user)
-    is_null(input.string_user)
 
     print("CreateContainerRequest: true")
 }
