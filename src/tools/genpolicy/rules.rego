@@ -347,14 +347,16 @@ allow_linux(p_oci, i_oci) {
     p_linux.Namespaces == i_linux.Namespaces
 
     count(i_linux.GIDMappings) == 0
+    count(i_linux.MountLabel) == 0
     count(i_linux.UIDMappings) == 0
     count(i_linux.Resources.Devices) == 0
     count(i_linux.RootfsPropagation) == 0
 
-    is_null(i_linux.Seccomp)
+    is_null(i_linux.IntelRdt)
     is_null(i_linux.Resources.Pids)
     is_null(i_linux.Resources.BlockIO)
     is_null(i_linux.Resources.Network)
+    is_null(i_linux.Seccomp)
 
     i_linux.Sysctl == {}
 
