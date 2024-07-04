@@ -25,12 +25,12 @@ runtime_make_flags="SKIP_GO_VERSION_CHECK=1 QEMUCMD= FCCMD= ACRNCMD= STRATOVIRTC
 # - for vanilla Kata we use the kernel binary. For ConfPods we use IGVM, so no need to provide kernel path.
 # - for vanilla Kata we explicitly set DEFSTATICRESOURCEMGMT_CLH. For ConfPods,
 #   the variable DEFSTATICRESOURCEMGMT_TEE is used which defaults to false
-# - for ConfPods we explicitly set the cloud-hypervisor path. The path is independent of the
+# - for ConfPods we explicitly set the cloud-hypervisor path. The path is independent of the PREFIX variable
 #   as we have a single CLH binary for both vanilla Kata and ConfPods
 if [ "${CONF_PODS}" == "no" ]; then
 	runtime_make_flags+=" DEFSTATICRESOURCEMGMT_CLH=true KERNELPATH_CLH=${KERNEL_BINARY_LOCATION}"
 else
-	runtime_make_flags+=" CLHSNPPATH=${CLOUD_HYPERVISOR_LOCATION}"
+	runtime_make_flags+=" CLHPATH=${CLOUD_HYPERVISOR_LOCATION}"
 fi
 
 # On Mariner 3.0 we use cgroupsv2 with a single sandbox cgroup
