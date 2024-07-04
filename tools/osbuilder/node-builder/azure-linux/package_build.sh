@@ -22,10 +22,23 @@ source "${common_file}"
 runtime_make_flags="SKIP_GO_VERSION_CHECK=1 QEMUCMD= FCCMD= ACRNCMD= STRATOVIRTCMD= DEFAULT_HYPERVISOR=cloud-hypervisor
 	DEFMEMSZ=256 DEFSTATICSANDBOXWORKLOADMEM=1792 DEFVIRTIOFSDAEMON=${VIRTIOFSD_BINARY_LOCATION} PREFIX=${INSTALL_PATH_PREFIX}"
 
+# - for vanilla Kata we use the kernel binary. For ConfPods we use IGVM, so no need to provide kernel path.
+# - for vanilla Kata we explicitly set DEFSTATICRESOURCEMGMT_CLH. For ConfPods,
+#   the variable DEFSTATICRESOURCEMGMT_TEE is used which defaults to false
+# - for ConfPods we explicitly set the cloud-hypervisor path. The path is independent of the
+#   as we have a single CLH binary for both vanilla Kata and ConfPods
 if [ "${CONF_PODS}" == "no" ]; then
 	runtime_make_flags+=" DEFSTATICRESOURCEMGMT_CLH=true KERNELPATH_CLH=${KERNEL_BINARY_LOCATION}"
+else
+	runtime_make_flags+=" CLHSNPPATH=${CLOUD_HYPERVISOR_LOCATION}"
 fi
 
+# On Mariner 3.0 we use cgroupsv2 with a single sandbox cgroup
+if [ "${OS_VERSION}" == "3.0" ]; then
+	runtime_make_flags+=" DEFSANDBOXCGROUPONLY=true"
+	echo "test1"
+fi
+echo "test"
 # add BUILD_TYPE=debug to build a debug agent (result in significantly increased agent binary size)
 # this will require to add same flag to the `make install` section for the agent in uvm_build.sh
 agent_make_flags="LIBC=gnu OPENSSL_NO_VENDOR=Y DESTDIR=${AGENT_INSTALL_DIR}"

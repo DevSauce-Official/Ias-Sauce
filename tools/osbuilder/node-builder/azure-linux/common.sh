@@ -37,6 +37,9 @@ else
 	SHIM_BINARY_NAME="containerd-shim-kata-v2"
 fi
 
+# this is where cloud-hypervisor-cvm gets installed (see package SPEC)
+CLOUD_HYPERVISOR_LOCATION="/usr/bin/cloud-hypervisor"
+# this is where kernel-uvm gets installed (see package SPEC)
 KERNEL_BINARY_LOCATION="/usr/share/cloud-hypervisor/vmlinux.bin"
 # Mariner 3: different binary name
 if [ "${OS_VERSION}" == "2.0" ]; then
