@@ -803,26 +803,27 @@ check_mount(p_mount, i_mount, bundle_id, sandbox_id) {
 }
 
 mount_source_allows(p_mount, i_mount, bundle_id, sandbox_id) {
-    regex1 := p_mount.source
-    regex2 := replace(regex1, "$(sfprefix)", policy_data.common.sfprefix)
-    regex3 := replace(regex2, "$(cpath)", policy_data.common.cpath)
-    regex4 := replace(regex3, "$(bundle-id)", bundle_id)
+    regex1 := expand_source(p_mount.source)
+    regex2 := replace(regex1, "$(bundle-id)", bundle_id)
 
-    print("mount_source_allows 1: regex4 =", regex4)
-    regex.match(regex4, i_mount.source)
+    print("mount_source_allows 1: regex2 =", regex2)
+    regex.match(regex2, i_mount.source)
 
     print("mount_source_allows 1: true")
 }
 mount_source_allows(p_mount, i_mount, bundle_id, sandbox_id) {
-    regex1 := p_mount.source
-    regex2 := replace(regex1, "$(sfprefix)", policy_data.common.sfprefix)
-    regex3 := replace(regex2, "$(cpath)", policy_data.common.cpath)
-    regex4 := replace(regex3, "$(sandbox-id)", sandbox_id)
+    regex1 := expand_source(p_mount.source)
+    regex2 := replace(regex1, "$(sandbox-id)", sandbox_id)
 
-    print("mount_source_allows 2: regex4 =", regex4)
-    regex.match(regex4, i_mount.source)
+    print("mount_source_allows 2: regex2 =", regex2)
+    regex.match(regex2, i_mount.source)
 
     print("mount_source_allows 2: true")
+}
+
+expand_source(p_source) = regex2 {
+    regex1 := replace(p_source, "$(sfprefix)", policy_data.common.sfprefix)
+    regex2 := replace(regex1, "$(cpath)", policy_data.common.cpath)
 }
 
 ######################################################################
