@@ -56,18 +56,14 @@ wait_for_pod_ready() {
 @test "ExecProcessRequest tests" {
 	wait_for_pod_ready
 	
-	# Execute commands that were allowed by the K8s YAML file.
+	# Execute commands allowed by the policy.
 	pod_exec_allowed_command "${pod_name}" "echo" "livenessProbe" "test"
 	pod_exec_allowed_command "${pod_name}" "sh" "-c" "ls -l /"
 	pod_exec_allowed_command "${pod_name}" "echo" "startupProbe" "test"
 
-	# This test should fail but it passes because genpolicy joins the exec args from its
-	# input K8s YAML file and from the command being executed, and compares the joined
-	# command lines instead of comparing each argument.
-	pod_exec_allowed_command "${pod_name}" "echo" "livenessProbe test"
-
-	# Try to execute a disallowed command.
+	# Try to execute commands disallowed by the policy.
 	pod_exec_blocked_command "${pod_name}" "echo" "hello"
+	pod_exec_blocked_command "${pod_name}" "echo" "livenessProbe test"
 }
 
 @test "Successful pod with auto-generated policy" {
