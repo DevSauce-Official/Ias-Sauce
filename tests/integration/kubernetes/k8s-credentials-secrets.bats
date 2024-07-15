@@ -44,8 +44,8 @@ setup() {
 	kubectl wait --for=condition=Ready --timeout=$timeout pod "$pod_name"
 
 	# List the files
-	kubectl exec $pod_name -- sh -c "$cmd" | grep -w "password"
-	kubectl exec $pod_name -- sh -c "$cmd" | grep -w "username"
+	kubectl exec $pod_name -- "$exec_command" | grep -w "password"
+	kubectl exec $pod_name -- "$exec_command" | grep -w "username"
 
 	# Create a pod that has access to the secret data through environment variables
 	kubectl create -f "${pod_config_dir}/pod-secret-env.yaml"

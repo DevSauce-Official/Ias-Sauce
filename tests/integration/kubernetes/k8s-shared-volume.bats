@@ -38,7 +38,7 @@ setup() {
 
 	# Communicate containers
 	msg="Hello from the $second_container_name"
-	kubectl exec "$pod_name" -c "$first_container_name" -- sh -c "$cmd" | grep "$msg"
+	kubectl exec "$pod_name" -c "$first_container_name" -- "$exec_command" | grep "$msg"
 }
 
 @test "initContainer with shared volume" {
@@ -63,7 +63,7 @@ setup() {
 	# Check pods
 	kubectl wait --for=condition=Ready --timeout=$timeout pod $pod_name
 
-	kubectl exec "$pod_name" -c "$last_container" -- sh -c "$cmd"
+	kubectl exec "$pod_name" -c "$last_container" -- "$exec_command"
 }
 
 teardown() {

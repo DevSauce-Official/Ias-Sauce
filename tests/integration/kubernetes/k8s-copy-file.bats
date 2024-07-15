@@ -53,7 +53,7 @@ setup() {
 	kubectl cp "$file_name" $pod_name:/tmp
 
 	# Print environment variables
-	kubectl exec $pod_name -- sh -c "${cat_command}" | grep $content
+	kubectl exec $pod_name -- $exec_command | grep $content
 }
 
 @test "Copy from pod to host" {
@@ -88,7 +88,7 @@ setup() {
 	kubectl get pods --all-namespaces
 
 	# Create a file in the pod
-	kubectl exec "$pod_name" -- sh -c "$guest_command"
+	kubectl exec "$pod_name" -- $exec_command
 
 	kubectl logs "$pod_name" || true
 	kubectl describe pod "$pod_name" || true

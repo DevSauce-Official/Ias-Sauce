@@ -40,7 +40,7 @@ setup() {
 	for _ in $(seq 1 "$retries"); do
 		# Get number of cpus
 		number_cpus=$(kubectl exec pod/"$pod_name" -c "$container_name" \
-			-- sh -c "$num_cpus_cmd")
+			-- "$exec_command")
 		if [[ "$number_cpus" =~ ^[0-9]+$ ]]; then
 			# Verify number of cpus
 			[ "$number_cpus" -le "$max_number_cpus" ]

@@ -32,14 +32,14 @@ setup() {
 	kubectl wait --for=condition=Ready --timeout=$timeout pod "$pod_name"
 
 	# Print environment variables
-	kubectl exec $pod_name -- sh -c $cmd | grep "MY_POD_NAME=$pod_name"
-	kubectl exec $pod_name -- sh -c $cmd | \
+	kubectl exec $pod_name -- "$exec_command" | grep "MY_POD_NAME=$pod_name"
+	kubectl exec $pod_name -- "$exec_command" | \
 		grep "HOST_IP=\([0-9]\+\(\.\|$\)\)\{4\}"
 	# Requested 32Mi of memory
-	kubectl exec $pod_name -- sh -c $cmd | \
+	kubectl exec $pod_name -- "$exec_command" | \
 		grep "MEMORY_REQUESTS=$((1024 * 1024 * 32))"
 	# Memory limits allocated by the node
-	kubectl exec $pod_name -- sh -c $cmd | grep "MEMORY_LIMITS=[1-9]\+"
+	kubectl exec $pod_name -- "$exec_command" | grep "MEMORY_LIMITS=[1-9]\+"
 }
 
 teardown() {

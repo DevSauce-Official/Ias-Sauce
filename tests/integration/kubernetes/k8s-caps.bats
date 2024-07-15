@@ -52,7 +52,7 @@ setup() {
         waitForProcess "$wait_time" "$sleep_time" "$cmd"
 
         # Verify expected capabilities from exec context:
-        kubectl exec "$pod_name" -- sh -c "${command}" | grep -q "$expected"
+        kubectl exec "$pod_name" -- "$exec_command" | grep -q "$expected"
 }
 
 teardown() {
@@ -61,7 +61,7 @@ teardown() {
         echo "$expected"
         echo "observed: "
         kubectl logs "pod/$pod_name"
-        kubectl exec "$pod_name" -- sh -c "${command}" | grep Cap
+        kubectl exec "$pod_name" -- "$exec_command" | grep Cap
         kubectl delete pod "$pod_name"
 	delete_tmp_policy_settings_dir "${policy_settings_dir}"
 }
