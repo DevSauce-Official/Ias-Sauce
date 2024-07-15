@@ -7,6 +7,8 @@ package virtcontainers
 
 import (
 	"context"
+	"fmt"
+	"os"
 	"runtime"
 
 	deviceApi "github.com/kata-containers/kata-containers/src/runtime/pkg/device/api"
@@ -63,6 +65,8 @@ func createSandboxFromConfig(ctx context.Context, sandboxConfig SandboxConfig, f
 		return nil, err
 	}
 
+	fmt.Fprintln(os.Stderr, "<mitchzhu> api.go after createSandbox")
+
 	// Cleanup sandbox resources in case of any failure
 	defer func() {
 		if err != nil {
@@ -74,6 +78,8 @@ func createSandboxFromConfig(ctx context.Context, sandboxConfig SandboxConfig, f
 	if err = s.createNetwork(ctx); err != nil {
 		return nil, err
 	}
+
+	fmt.Fprintln(os.Stderr, "<mitchzhu> api.go after createNetwork")
 
 	// network rollback
 	defer func() {
@@ -87,10 +93,14 @@ func createSandboxFromConfig(ctx context.Context, sandboxConfig SandboxConfig, f
 		return nil, err
 	}
 
+	fmt.Fprintln(os.Stderr, "<mitchzhu> api.go after setupResourceController")
+
 	// Start the VM
 	if err = s.startVM(ctx, prestartHookFunc); err != nil {
 		return nil, err
 	}
+
+	fmt.Fprintln(os.Stderr, "<mitchzhu> api.go after startVM")
 
 	// rollback to stop VM if error occurs
 	defer func() {
@@ -109,6 +119,7 @@ func createSandboxFromConfig(ctx context.Context, sandboxConfig SandboxConfig, f
 	if err = s.createContainers(ctx); err != nil {
 		return nil, err
 	}
+	fmt.Fprintln(os.Stderr, "<mitchzhu> api.go after createContainers")
 
 	return s, nil
 }

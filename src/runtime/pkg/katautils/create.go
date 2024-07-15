@@ -147,6 +147,8 @@ func CreateSandbox(ctx context.Context, vci vc.VC, ociSpec specs.Spec, runtimeCo
 		return nil, vc.Process{}, err
 	}
 
+	fmt.Fprintln(os.Stderr, "<mitchzhu> after SetupNetworkNamespace")
+
 	defer func() {
 		// cleanup netns if kata creates it
 		ns := sandboxConfig.NetworkConfig
@@ -167,22 +169,29 @@ func CreateSandbox(ctx context.Context, vci vc.VC, ociSpec specs.Spec, runtimeCo
 	delete(ociSpec.Annotations, vcAnnotations.Policy)
 	delete(sandboxConfig.Annotations, vcAnnotations.Policy)
 
+	fmt.Fprintln(os.Stderr, "<mitchzhu> in CreateSandBox, before CreateSandbox")
+
 	sandbox, err := vci.CreateSandbox(ctx, sandboxConfig, func(ctx context.Context) error {
 		// Run pre-start OCI hooks, in the runtime namespace.
 		if err := PreStartHooks(ctx, ociSpec, containerID, bundlePath); err != nil {
+			fmt.Fprintln(os.Stderr, "<mitchzhu> in CreateSandBox, condition1")
 			return err
 		}
 
 		// Run create runtime OCI hooks, in the runtime namespace.
 		if err := CreateRuntimeHooks(ctx, ociSpec, containerID, bundlePath); err != nil {
+			fmt.Fprintln(os.Stderr, "<mitchzhu> in CreateSandBox, condition2")
 			return err
 		}
 
 		return nil
 	})
 	if err != nil {
+		fmt.Fprintln(os.Stderr, "<mitchzhu> in CreateSandBox got error code")
 		return nil, vc.Process{}, err
 	}
+
+	fmt.Fprintln(os.Stderr, "<mitchzhu> in CreateSandBox, after CreateSandbox")
 
 	sid := sandbox.ID()
 	kataUtilsLogger = kataUtilsLogger.WithField("sandbox", sid)

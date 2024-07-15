@@ -149,6 +149,7 @@ func withCDI(annotations map[string]string, cdiSpecDirs []string, spec *specs.Sp
 }
 
 func create(ctx context.Context, s *service, r *taskAPI.CreateTaskRequest) (*container, error) {
+	fmt.Fprintln(os.Stderr, "<mitchzhu> called create")
 	rootFs := vc.RootFs{}
 	if len(r.Rootfs) == 1 {
 		m := r.Rootfs[0]
@@ -261,10 +262,12 @@ func create(ctx context.Context, s *service, r *taskAPI.CreateTaskRequest) (*con
 		// ctx will be canceled after this rpc service call, but the sandbox will live
 		// across multiple rpc service calls.
 		//
+		fmt.Fprintln(os.Stderr, "<mitchzhu> before calling sandbox")
 		sandbox, _, err := katautils.CreateSandbox(s.ctx, vci, *ociSpec, *s.config, rootFs, r.ID, bundlePath, disableOutput, false)
 		if err != nil {
 			return nil, err
 		}
+		fmt.Fprintln(os.Stderr, "<mitchzhu> after calling sandbox")
 		s.sandbox = sandbox
 		pid, err := s.sandbox.GetHypervisorPid()
 		if err != nil {

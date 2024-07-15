@@ -498,6 +498,8 @@ func createSandbox(ctx context.Context, sandboxConfig SandboxConfig, factory Fac
 	span, ctx := katatrace.Trace(ctx, nil, "createSandbox", sandboxTracingTags, map[string]string{"sandbox_id": sandboxConfig.ID})
 	defer span.End()
 
+	fmt.Fprintln(os.Stderr, "<mitchzhu> inside sandbox.go createSandbox")
+
 	if err := createAssets(ctx, &sandboxConfig); err != nil {
 		return nil, err
 	}
@@ -529,11 +531,14 @@ func createSandbox(ctx context.Context, sandboxConfig SandboxConfig, factory Fac
 	if err := s.agent.createSandbox(ctx, s); err != nil {
 		return nil, err
 	}
+	fmt.Fprintln(os.Stderr, "<mitchzhu> inside sandbox.go before s.setSandboxState")
 
 	// Set sandbox state
 	if err := s.setSandboxState(types.StateReady); err != nil {
 		return nil, err
 	}
+
+	fmt.Fprintln(os.Stderr, "<mitchzhu> inside sandbox.go after s.setSandboxState")
 
 	return s, nil
 }
@@ -1371,6 +1376,7 @@ func (s *Sandbox) startVM(ctx context.Context, prestartHookFunc func(context.Con
 	defer span.End()
 
 	s.Logger().Info("Starting VM")
+	fmt.Fprintln(os.Stderr, "<mitchzhu> sandbox.go inside startVM")
 
 	if s.config.HypervisorConfig.Debug {
 		// create console watcher
@@ -1380,6 +1386,8 @@ func (s *Sandbox) startVM(ctx context.Context, prestartHookFunc func(context.Con
 		}
 		s.cw = consoleWatcher
 	}
+
+	fmt.Fprintln(os.Stderr, "<mitchzhu> sandbox.go startVM after creating console watcher")
 
 	defer func() {
 		if err != nil {
@@ -1398,6 +1406,8 @@ func (s *Sandbox) startVM(ctx context.Context, prestartHookFunc func(context.Con
 		}
 	}
 
+	fmt.Fprintln(os.Stderr, "<mitchzhu> sandbox.go startVM before s.network.Run")
+
 	if err := s.network.Run(ctx, func() error {
 		if s.factory != nil {
 			vm, err := s.factory.GetVM(ctx, VMConfig{
@@ -1411,6 +1421,8 @@ func (s *Sandbox) startVM(ctx context.Context, prestartHookFunc func(context.Con
 
 			return vm.assignSandbox(s)
 		}
+
+		fmt.Fprintln(os.Stderr, "<mitchzhu> sandbox.go startVM before s.hyperviosr.StartVM")
 
 		return s.hypervisor.StartVM(ctx, VmStartTimeout)
 	}); err != nil {
@@ -1437,6 +1449,8 @@ func (s *Sandbox) startVM(ctx context.Context, prestartHookFunc func(context.Con
 			return err
 		}
 	}
+
+	fmt.Fprintln(os.Stderr, "<mitchzhu> sandbox.go startVM VM started")
 
 	s.Logger().Info("VM started")
 
@@ -1500,6 +1514,7 @@ func (s *Sandbox) CreateContainer(ctx context.Context, contConfig ContainerConfi
 	// Update sandbox config to include the new container's config
 	s.config.Containers = append(s.config.Containers, contConfig)
 
+	fmt.Fprintln(os.Stderr, "<mitchzhu> called CreateContainer")
 	var err error
 
 	defer func() {
@@ -1547,6 +1562,7 @@ func (s *Sandbox) CreateContainer(ctx context.Context, contConfig ContainerConfi
 	if err = s.updateResources(ctx); err != nil {
 		return nil, err
 	}
+	fmt.Fprintln(os.Stderr, "<mitchzhu> called updateResources")
 
 	if err = s.resourceControllerUpdate(ctx); err != nil {
 		return nil, err
@@ -2197,12 +2213,18 @@ func (s *Sandbox) updateResources(ctx context.Context) error {
 		return nil
 	}
 
+	fmt.Fprintln(os.Stderr, "<mitchzhu> before calling s.calculateSandboxCPUs")
+
 	sandboxVCPUs, err := s.calculateSandboxCPUs()
 	if err != nil {
 		return err
 	}
+
+	fmt.Fprintln(os.Stderr, "<mitchzhu> sandboxVCPUs 1: ", sandboxVCPUs)
 	// Add default vcpus for sandbox
 	sandboxVCPUs += s.hypervisor.HypervisorConfig().NumVCPUsF
+
+	fmt.Fprintln(os.Stderr, "<mitchzhu> sandboxVCPUs 2: ", sandboxVCPUs)
 
 	sandboxMemoryByte, sandboxneedPodSwap, sandboxSwapByte := s.calculateSandboxMemory()
 
@@ -2451,6 +2473,8 @@ func (s *Sandbox) calculateSandboxCPUs() (float32, error) {
 	if floatCPU == 0 && cpusetCount > 0 {
 		return float32(cpusetCount), nil
 	}
+
+	fmt.Fprintln(os.Stderr, "<mitchzhu> floatCPU: ", floatCPU)
 
 	return floatCPU, nil
 }

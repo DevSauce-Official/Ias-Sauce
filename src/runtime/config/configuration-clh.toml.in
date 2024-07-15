@@ -96,6 +96,7 @@ kernel_params = "@KERNELPARAMS@"
 # > 0 <= number of physical cores --> will be set to the specified number
 # > number of physical cores      --> will be set to the actual number of physical cores
 default_vcpus = 1
+# mitchzhu: this should be 0.25
 
 # Default maximum number of vCPUs per SB/VM:
 # unspecified or == 0             --> will be set to the actual number of physical cores or to the maximum number
