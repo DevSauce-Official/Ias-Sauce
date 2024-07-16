@@ -40,7 +40,7 @@ setup() {
 	kubectl wait --for=condition=Ready --timeout=$timeout pod $pod_name
 
 	# Check postStart message
-	check_postStart=$(kubectl exec $pod_name -- sh -c "$display_message")
+	check_postStart=$(kubectl exec $pod_name -- "${exec_command[@]}")
 	echo "check_postStart=$check_postStart"
 	echo "$check_postStart" | grep "Hello from the postStart handler"
 }

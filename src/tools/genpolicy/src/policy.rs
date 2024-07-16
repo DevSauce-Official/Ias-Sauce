@@ -314,7 +314,7 @@ pub struct CreateContainerRequestDefaults {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ExecProcessRequestDefaults {
     /// Allow these commands to be executed.
-    commands: Vec<String>,
+    commands: Vec<Vec<String>>,
 
     /// Allow commands matching these regexes to be executed.
     regex: Vec<String>,
