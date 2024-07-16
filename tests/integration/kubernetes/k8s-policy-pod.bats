@@ -46,10 +46,32 @@ setup() {
 	cp "${pre_generate_pod_yaml}" "${testcase_pre_generate_pod_yaml}"
 }
 
-@test "Successful pod with auto-generated policy" {
+# Common function for several test cases from this bats script.
+wait_for_pod_ready() {
 	kubectl create -f "${correct_configmap_yaml}"
 	kubectl create -f "${correct_pod_yaml}"
 	kubectl wait --for=condition=Ready "--timeout=${timeout}" pod "${pod_name}"
+}
+
+@test "ExecProcessRequest tests" {
+	wait_for_pod_ready
+	
+	# Execute commands that were allowed by the K8s YAML file.
+	pod_exec_allowed_command "${pod_name}" "echo" "livenessProbe" "test"
+	pod_exec_allowed_command "${pod_name}" "sh" "-c" "ls -l /"
+	pod_exec_allowed_command "${pod_name}" "echo" "startupProbe" "test"
+
+	# This test should fail but it passes because genpolicy joins the exec args from its
+	# input K8s YAML file and from the command being executed, and compares the joined
+	# command lines instead of comparing each argument.
+	pod_exec_allowed_command "${pod_name}" "echo" "livenessProbe test"
+
+	# Try to execute a disallowed command.
+	pod_exec_blocked_command "${pod_name}" "echo" "hello"
+}
+
+@test "Successful pod with auto-generated policy" {
+	wait_for_pod_ready
 }
 
 @test "Successful pod with auto-generated policy and runtimeClassName filter" {
