@@ -19,8 +19,8 @@ setup() {
 	# Add policy to the pod yaml file
 	policy_settings_dir="$(create_tmp_policy_settings_dir "${pod_config_dir}")"
 
-	exec_command="sh -c ${cmd}"
-	add_exec_to_policy_settings "${policy_settings_dir}" "${exec_command}"
+	exec_command=(sh -c "${cmd}")
+	add_exec_to_policy_settings "${policy_settings_dir}" "${exec_command[@]}"
 	add_requests_to_policy_settings "${policy_settings_dir}" "ReadStreamRequest"
 
 	auto_generate_policy "${policy_settings_dir}" "${pod_yaml_file}"
@@ -44,8 +44,8 @@ setup() {
 	kubectl wait --for=condition=Ready --timeout=$timeout pod "$pod_name"
 
 	# List the files
-	kubectl exec $pod_name -- sh -c "$cmd" | grep -w "password"
-	kubectl exec $pod_name -- sh -c "$cmd" | grep -w "username"
+	kubectl exec $pod_name -- "${exec_command[@]}" | grep -w "password"
+	kubectl exec $pod_name -- "${exec_command[@]}" | grep -w "username"
 
 	# Create a pod that has access to the secret data through environment variables
 	kubectl create -f "${pod_config_dir}/pod-secret-env.yaml"
@@ -54,6 +54,7 @@ setup() {
 	kubectl wait --for=condition=Ready --timeout=$timeout pod "$second_pod_name"
 
 	# Display environment variables
+	# TODO - why no policy?
 	second_cmd="printenv"
 	kubectl exec $second_pod_name -- sh -c "$second_cmd" | grep -w "SECRET_USERNAME"
 	kubectl exec $second_pod_name -- sh -c "$second_cmd" | grep -w "SECRET_PASSWORD"

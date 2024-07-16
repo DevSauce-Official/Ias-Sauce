@@ -205,16 +205,18 @@ add_exec_to_policy_settings() {
 
 	auto_generate_policy_enabled || return 0
 
-	# Change genpolicy settings to allow kubectl to exec the command specified by the caller.
-	jq_command=".request_defaults.ExecProcessRequest.commands |= . + [["
-
-	for command in "${@}"
+	# Add quotes to each argument and join them separated by comma.
+	local exec_args=""
+	for arg in "${@}"
 	do
-		jq_command+=$(printf '"%s",' "${command}")
+		exec_args+=$(printf '"%s",' "${arg}")
 	done
 
-	jq_command="${jq_command::-1}"
+	# Use jq to allow the exec_command.
+	local jq_command=".request_defaults.ExecProcessRequest.commands |= . + [["
+	jq_command+="${exec_args::-1}"
 	jq_command+="]]"
+	echo "Allowing exec: " "${jq_command}"
 
 	jq "${jq_command}" \
 		"${settings_dir}/genpolicy-settings.json" > \
@@ -248,10 +250,10 @@ add_requests_to_policy_settings() {
 add_copy_from_host_to_policy_settings() {
 	declare -r genpolicy_settings_dir="$1"
 
-	exec_command="test -d /tmp"
-	add_exec_to_policy_settings "${policy_settings_dir}" "${exec_command}"
-	exec_command="tar -xmf - -C /tmp"
-	add_exec_to_policy_settings "${policy_settings_dir}" "${exec_command}"
+	exec_command=(test -d /tmp)
+	add_exec_to_policy_settings "${policy_settings_dir}" "${exec_command[@]}"
+	exec_command=(tar -xmf - -C /tmp)
+	add_exec_to_policy_settings "${policy_settings_dir}" "${exec_command[@]}"
 }
 
 # Change genpolicy settings to allow executing on the Guest VM the commands
@@ -260,8 +262,8 @@ add_copy_from_guest_to_policy_settings() {
 	declare -r genpolicy_settings_dir="$1"
 	declare -r copied_file="$2"
 
-	exec_command="tar cf - ${copied_file}"
-	add_exec_to_policy_settings "${policy_settings_dir}" "${exec_command}"
+	exec_command=(tar cf - "${copied_file}")
+	add_exec_to_policy_settings "${policy_settings_dir}" "${exec_command[@]}"
 }
 
 # Change genpolicy settings to allow "kubectl exec" to execute a command
