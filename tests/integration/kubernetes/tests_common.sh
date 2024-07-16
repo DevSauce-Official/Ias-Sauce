@@ -201,16 +201,25 @@ auto_generate_policy() {
 # and to read console output from a test pod.
 add_exec_to_policy_settings() {
 	declare -r settings_dir="$1"
-	declare -r allowed_exec="$2"
+	shift
 
 	auto_generate_policy_enabled || return 0
 
 	# Change genpolicy settings to allow kubectl to exec the command specified by the caller.
-	info "${settings_dir}/genpolicy-settings.json: allowing exec: ${allowed_exec}"
-	jq --arg allowed_exec "${allowed_exec}" \
-		'.request_defaults.ExecProcessRequest.commands |= . + [$allowed_exec]' \
+	jq_command=".request_defaults.ExecProcessRequest.commands |= . + [["
+
+	for command in "${@}"
+	do
+		jq_command+=$(printf '"%s",' "${command}")
+	done
+
+	jq_command="${jq_command::-1}"
+	jq_command+="]]"
+
+	jq "${jq_command}" \
 		"${settings_dir}/genpolicy-settings.json" > \
 		"${settings_dir}/new-genpolicy-settings.json"
+
 	mv "${settings_dir}/new-genpolicy-settings.json" \
 		"${settings_dir}/genpolicy-settings.json"
 }
