@@ -132,8 +132,7 @@ auto_generate_policy_enabled() {
 
 # adapt common policy settings for tdx
 adapt_common_policy_settings_for_tdx() {
-
-	local settings_dir=$1
+	local -r settings_dir=$1
 
 	info "Adapting common policy settings for TDX"
 	jq '.common.cpath = "/run/kata-containers" | .volumes.configMap.mount_point = "^$(cpath)/$(bundle-id)-[a-z0-9]{16}-"' "${settings_dir}/genpolicy-settings.json" > temp.json && sudo mv temp.json "${settings_dir}/genpolicy-settings.json"
@@ -141,8 +140,7 @@ adapt_common_policy_settings_for_tdx() {
 
 # adapt common policy settings for various platforms
 adapt_common_policy_settings() {
-
-	local settings_dir=$1
+	local -r settings_dir=$1
 
 	case "${KATA_HYPERVISOR}" in
   		"qemu-tdx")
@@ -153,10 +151,10 @@ adapt_common_policy_settings() {
 # If auto-generated policy testing is enabled, make a copy of the genpolicy settings,
 # and change these settings to use Kata CI cluster's default namespace.
 create_common_genpolicy_settings() {
-	declare -r genpolicy_settings_dir="$1"
-	declare -r default_genpolicy_settings_dir="/opt/kata/share/defaults/kata-containers"
-
 	auto_generate_policy_enabled || return 0
+
+	local -r genpolicy_settings_dir="$1"
+	local -r default_genpolicy_settings_dir="/opt/kata/share/defaults/kata-containers"
 
 	adapt_common_policy_settings "${default_genpolicy_settings_dir}"
 
@@ -170,9 +168,9 @@ create_common_genpolicy_settings() {
 # If auto-generated policy testing is enabled, make a copy of the common genpolicy settings
 # described above into a temporary directory that will be used by the current test case.
 create_tmp_policy_settings_dir() {
-	declare -r common_settings_dir="$1"
-
 	auto_generate_policy_enabled || return 0
+
+	local -r common_settings_dir="$1"
 
 	tmp_settings_dir=$(mktemp -d --tmpdir="${common_settings_dir}" genpolicy.XXXXXXXXXX)
 	cp "${common_settings_dir}/rules.rego" "${tmp_settings_dir}"
@@ -183,9 +181,9 @@ create_tmp_policy_settings_dir() {
 
 # Delete a directory created by create_tmp_policy_settings_dir.
 delete_tmp_policy_settings_dir() {
-	local settings_dir="$1"
-
 	auto_generate_policy_enabled || return 0
+
+	local -r settings_dir="$1"
 
 	if [ -d "${settings_dir}" ]; then
 		info "Deleting ${settings_dir}"
@@ -195,12 +193,13 @@ delete_tmp_policy_settings_dir() {
 
 # Execute genpolicy to auto-generate policy for a test YAML file.
 auto_generate_policy() {
-	declare -r settings_dir="$1"
-	declare -r yaml_file="$2"
-	declare -r config_map_yaml_file="$3"
-	declare -r additional_flags="$4"
-
 	auto_generate_policy_enabled || return 0
+
+	local -r settings_dir="$1"
+	local -r yaml_file="$2"
+	local -r config_map_yaml_file="$3"
+	local -r additional_flags="$4"
+
 	local genpolicy_command="RUST_LOG=info /opt/kata/bin/genpolicy -u -y ${yaml_file}"
 	genpolicy_command+=" -p ${settings_dir}/rules.rego"
 	genpolicy_command+=" -j ${settings_dir}/genpolicy-settings.json"
@@ -222,10 +221,10 @@ auto_generate_policy() {
 # Change genpolicy settings to allow "kubectl exec" to execute a command
 # and to read console output from a test pod.
 add_exec_to_policy_settings() {
-	declare -r settings_dir="$1"
-	declare -r allowed_exec="$2"
-
 	auto_generate_policy_enabled || return 0
+
+	local -r settings_dir="$1"
+	local -r allowed_exec="$2"
 
 	# Change genpolicy settings to allow kubectl to exec the command specified by the caller.
 	info "${settings_dir}/genpolicy-settings.json: allowing exec: ${allowed_exec}"
@@ -239,11 +238,11 @@ add_exec_to_policy_settings() {
 
 # Change genpolicy settings to allow one or more ttrpc requests from the Host to the Guest.
 add_requests_to_policy_settings() {
-	declare -r settings_dir="$1"
-	shift
-	declare -r requests=("$@")
-
 	auto_generate_policy_enabled || return 0
+
+	local -r settings_dir="$1"
+	shift
+	local -r requests=("$@")
 
 	for request in ${requests[@]}
 	do
@@ -259,7 +258,9 @@ add_requests_to_policy_settings() {
 # Change genpolicy settings to allow executing on the Guest VM the commands
 # used by "kubectl cp" from the Host to the Guest.
 add_copy_from_host_to_policy_settings() {
-	declare -r genpolicy_settings_dir="$1"
+	auto_generate_policy_enabled || return 0
+
+	local -r genpolicy_settings_dir="$1"
 
 	exec_command="test -d /tmp"
 	add_exec_to_policy_settings "${policy_settings_dir}" "${exec_command}"
@@ -270,20 +271,22 @@ add_copy_from_host_to_policy_settings() {
 # Change genpolicy settings to allow executing on the Guest VM the commands
 # used by "kubectl cp" from the Guest to the Host.
 add_copy_from_guest_to_policy_settings() {
-	declare -r genpolicy_settings_dir="$1"
-	declare -r copied_file="$2"
+	auto_generate_policy_enabled || return 0
 
-	exec_command="tar cf - ${copied_file}"
+	local -r genpolicy_settings_dir="$1"
+	local -r copied_file="$2"
+
+	local -r exec_command="tar cf - ${copied_file}"
 	add_exec_to_policy_settings "${policy_settings_dir}" "${exec_command}"
 }
 
 # Change genpolicy settings to allow "kubectl exec" to execute a command
 # and to read console output from a test pod.
 set_namespace_to_policy_settings() {
-	declare -r settings_dir="$1"
-	declare -r namespace="$2"
-
 	auto_generate_policy_enabled || return 0
+
+	local -r settings_dir="$1"
+	local -r namespace="$2"
 
 	info "${settings_dir}/genpolicy-settings.json: namespace: ${namespace}"
 	jq --arg namespace "${namespace}" \
@@ -293,10 +296,15 @@ set_namespace_to_policy_settings() {
 	mv "${settings_dir}/new-genpolicy-settings.json" "${settings_dir}/genpolicy-settings.json"
 }
 
+# These are the Guest images used to test the agent policy.
+#
+# Notes:
+# - Some of these Guests might be tested by CI just using *hard-coded* policies. *Auto-generated*
+#   policies are tested just when "${AUTO_GENERATE_POLICY}" == "yes".
+# - *All* CI Guest images support agent policy, but those CI Guests that are not enabled here
+#   are tested just with the "allow all" policy that is built in these Guest images, by default.
 policy_tests_enabled() {
-	# The Guest images for these platforms have been built using AGENT_POLICY=yes -
-	# see kata-deploy-binaries.sh.
-	local enabled_hypervisors="qemu-coco-dev qemu-sev qemu-snp qemu-tdx"
+	local -r enabled_hypervisors="qemu-coco-dev qemu-sev qemu-snp qemu-tdx"
 	[[ " $enabled_hypervisors " =~ " ${KATA_HYPERVISOR} " ]] || \
 		[ "${KATA_HOST_OS}" == "cbl-mariner" ]
 }
@@ -304,11 +312,11 @@ policy_tests_enabled() {
 add_allow_all_policy_to_yaml() {
 	policy_tests_enabled || return 0
 
-	local yaml_file="$1"
+	local -r yaml_file="$1"
 	# Previous version of yq was not ready to handle multiple objects in a single yaml.
 	# By default was changing only the first object.
 	# With yq>4 we need to make it explicit during the read and write.
-	local resource_kind="$(yq .kind ${yaml_file} | head -1)"
+	local -r resource_kind="$(yq .kind ${yaml_file} | head -1)"
 
 	case "${resource_kind}" in
 
@@ -343,10 +351,10 @@ add_allow_all_policy_to_yaml() {
 
 # Execute "kubectl describe ${pod}" in a loop, until its output contains "${endpoint} is blocked by policy"
 wait_for_blocked_request() {
-	endpoint="$1"
-	pod="$2"
+	local -r endpoint="$1"
+	local -r pod="$2"
 
-	command="kubectl describe pod ${pod} | grep \"${endpoint} is blocked by policy\""
+	local -r command="kubectl describe pod ${pod} | grep \"${endpoint} is blocked by policy\""
 	info "Waiting ${wait_time} seconds for: ${command}"
 	waitForProcess "${wait_time}" "$sleep_time" "${command}" >/dev/null 2>/dev/null
 }
