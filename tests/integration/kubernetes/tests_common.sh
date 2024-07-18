@@ -195,13 +195,14 @@ delete_tmp_policy_settings_dir() {
 
 # Execute genpolicy to auto-generate policy for a test YAML file.
 auto_generate_policy() {
-	declare -r settings_dir="$1"
-	declare -r yaml_file="$2"
-	declare -r config_map_yaml_file="$3"
-	declare -r additional_flags="$4"
-
 	auto_generate_policy_enabled || return 0
-	local genpolicy_command="RUST_LOG=info /opt/kata/bin/genpolicy -u -y ${yaml_file}"
+
+	local -r settings_dir="$1"
+	local -r yaml_file="$2"
+	local -r config_map_yaml_file="$3"
+	local -r additional_flags="$4"
+
+	local genpolicy_command="RUST_LOG=info /opt/kata/bin/genpolicy -r -u -y ${yaml_file}"
 	genpolicy_command+=" -p ${settings_dir}/rules.rego"
 	genpolicy_command+=" -j ${settings_dir}/genpolicy-settings.json"
 
@@ -216,21 +217,29 @@ auto_generate_policy() {
 	genpolicy_command+=" ${additional_flags}"
 
 	info "Executing: ${genpolicy_command}"
-	eval "${genpolicy_command}"
+	eval "${genpolicy_command}" > "${yaml_file}.rego"
 }
 
-# Change genpolicy settings to allow "kubectl exec" to execute a command
-# and to read console output from a test pod.
+# Change genpolicy settings to allow "kubectl exec" to execute a command.
 add_exec_to_policy_settings() {
-	declare -r settings_dir="$1"
-	declare -r allowed_exec="$2"
-
 	auto_generate_policy_enabled || return 0
 
-	# Change genpolicy settings to allow kubectl to exec the command specified by the caller.
-	info "${settings_dir}/genpolicy-settings.json: allowing exec: ${allowed_exec}"
-	jq --arg allowed_exec "${allowed_exec}" \
-		'.request_defaults.ExecProcessRequest.commands |= . + [$allowed_exec]' \
+	local -r settings_dir="$1"
+	shift
+
+	# Create a json sequence including all the quoted command arguments.
+	local exec_args="\"$1\""
+	if [ "${#@}" -gt "1" ]; then
+		local exec_args=$(printf '"%s",' "${@}")
+		# Remove the trailing comma character.
+		exec_args="${exec_args::-1}"
+	fi
+	local jq_command=".request_defaults.ExecProcessRequest.allowed_commands |= . + [["
+	jq_command+="${exec_args}"
+	jq_command+="]]"
+
+	info "${settings_dir}/genpolicy-settings.json: allowing exec: <${jq_command}>"
+	jq "${jq_command}" \
 		"${settings_dir}/genpolicy-settings.json" > \
 		"${settings_dir}/new-genpolicy-settings.json"
 	mv "${settings_dir}/new-genpolicy-settings.json" \
@@ -259,29 +268,29 @@ add_requests_to_policy_settings() {
 # Change genpolicy settings to allow executing on the Guest VM the commands
 # used by "kubectl cp" from the Host to the Guest.
 add_copy_from_host_to_policy_settings() {
-	declare -r genpolicy_settings_dir="$1"
+	local -r genpolicy_settings_dir="$1"
 
-	exec_command="test -d /tmp"
-	add_exec_to_policy_settings "${policy_settings_dir}" "${exec_command}"
-	exec_command="tar -xmf - -C /tmp"
-	add_exec_to_policy_settings "${policy_settings_dir}" "${exec_command}"
+	local exec_command=(test -d /tmp)
+	add_exec_to_policy_settings "${policy_settings_dir}" "${exec_command[@]}"
+	exec_command=(tar -xmf - -C /tmp)
+	add_exec_to_policy_settings "${policy_settings_dir}" "${exec_command[@]}"
 }
 
 # Change genpolicy settings to allow executing on the Guest VM the commands
 # used by "kubectl cp" from the Guest to the Host.
 add_copy_from_guest_to_policy_settings() {
-	declare -r genpolicy_settings_dir="$1"
-	declare -r copied_file="$2"
+	local -r genpolicy_settings_dir="$1"
+	local -r copied_file="$2"
 
-	exec_command="tar cf - ${copied_file}"
-	add_exec_to_policy_settings "${policy_settings_dir}" "${exec_command}"
+	local -r exec_command=(tar cf - ${copied_file})
+	add_exec_to_policy_settings "${policy_settings_dir}" "${exec_command[@]}"
 }
 
 # Change genpolicy settings to allow "kubectl exec" to execute a command
 # and to read console output from a test pod.
 set_namespace_to_policy_settings() {
-	declare -r settings_dir="$1"
-	declare -r namespace="$2"
+	local -r settings_dir="$1"
+	local -r namespace="$2"
 
 	auto_generate_policy_enabled || return 0
 
@@ -296,7 +305,7 @@ set_namespace_to_policy_settings() {
 policy_tests_enabled() {
 	# The Guest images for these platforms have been built using AGENT_POLICY=yes -
 	# see kata-deploy-binaries.sh.
-	local enabled_hypervisors="qemu-coco-dev qemu-sev qemu-snp qemu-tdx"
+	local -r enabled_hypervisors="qemu-coco-dev qemu-sev qemu-snp qemu-tdx"
 	[[ " $enabled_hypervisors " =~ " ${KATA_HYPERVISOR} " ]] || \
 		[ "${KATA_HOST_OS}" == "cbl-mariner" ]
 }
@@ -304,11 +313,11 @@ policy_tests_enabled() {
 add_allow_all_policy_to_yaml() {
 	policy_tests_enabled || return 0
 
-	local yaml_file="$1"
+	local -r yaml_file="$1"
 	# Previous version of yq was not ready to handle multiple objects in a single yaml.
 	# By default was changing only the first object.
 	# With yq>4 we need to make it explicit during the read and write.
-	local resource_kind="$(yq .kind ${yaml_file} | head -1)"
+	local -r resource_kind="$(yq .kind ${yaml_file} | head -1)"
 
 	case "${resource_kind}" in
 

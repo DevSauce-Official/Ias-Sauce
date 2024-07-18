@@ -313,8 +313,11 @@ pub struct CreateContainerRequestDefaults {
 /// ExecProcessRequest settings from genpolicy-settings.json.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ExecProcessRequestDefaults {
+    /// Allow these commands to be executed. This field has been deprecated - use allowed_commands instead.
+    pub commands: Option<Vec<String>>,
+
     /// Allow these commands to be executed.
-    commands: Vec<String>,
+    pub allowed_commands: Vec<Vec<String>>,
 
     /// Allow commands matching these regexes to be executed.
     regex: Vec<String>,
